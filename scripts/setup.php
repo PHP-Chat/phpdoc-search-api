@@ -140,7 +140,7 @@ $dbSchema = [
         CREATE TABLE `constants`
         (
             `id`        INT          UNSIGNED NOT NULL AUTO_INCREMENT,
-            `book_id`   INT          UNSIGNED NOT NULL,
+            `book_id`   INT          UNSIGNED DEFAULT NULL,
             `slug`      VARCHAR(255) NOT NULL,
             `name`      VARCHAR(255) NOT NULL,
             `type`      VARCHAR(32)  NOT NULL,
@@ -155,7 +155,7 @@ $dbSchema = [
         CREATE TABLE `functions`
         (
             `id`        INT          UNSIGNED NOT NULL AUTO_INCREMENT,
-            `book_id`   INT          UNSIGNED NOT NULL,
+            `book_id`   INT          UNSIGNED DEFAULT NULL,
             `slug`      VARCHAR(255) NOT NULL,
             `name`      VARCHAR(255) NOT NULL,
             `last_seen` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -184,7 +184,7 @@ $dbSchema = [
         CREATE TABLE `classes`
         (
             `id`        INT          UNSIGNED NOT NULL AUTO_INCREMENT,
-            `book_id`   INT          UNSIGNED NOT NULL,
+            `book_id`   INT          UNSIGNED DEFAULT NULL,
             `slug`      VARCHAR(255) NOT NULL,
             `name`      VARCHAR(255) NOT NULL,
             `parent`    INT          UNSIGNED DEFAULT NULL,
@@ -207,7 +207,7 @@ $dbSchema = [
             `last_seen`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             PRIMARY KEY              (`id`),
-            UNIQUE KEY  `class-slug` (`class_id`, `slug`)
+            UNIQUE KEY  `class-name` (`class_id`, `name`)
         )
         DEFAULT CHARSET=utf8
     ",
@@ -222,7 +222,7 @@ $dbSchema = [
             `last_seen`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             PRIMARY KEY              (`id`),
-            UNIQUE KEY  `class-slug` (`class_id`, `slug`)
+            UNIQUE KEY  `class-name` (`class_id`, `name`)
         )
         DEFAULT CHARSET=utf8
     ",
@@ -237,7 +237,7 @@ $dbSchema = [
             `last_seen`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             PRIMARY KEY              (`id`),
-            UNIQUE KEY  `class-slug` (`class_id`, `slug`)
+            UNIQUE KEY  `class-name` (`class_id`, `name`)
         )
         DEFAULT CHARSET=utf8
     ",
