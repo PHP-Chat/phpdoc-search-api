@@ -64,7 +64,7 @@ function get_password($msg)
     $result = rtrim(fgets(STDIN), "\r\n");
 
     if (!$isWin) {
-        system('stty -echo');
+        system('stty echo');
         echo "\n";
     }
 
