@@ -508,7 +508,7 @@ foreach ($docRepos as $repo) {
 echo "\n";
 
 if (!$hasWork) {
-    exit("No changes since last index run, nothing to do\n");
+//    exit("No changes since last index run, nothing to do\n");
 }
 
 // Build .manual.xml
