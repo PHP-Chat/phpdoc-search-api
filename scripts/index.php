@@ -484,7 +484,6 @@ $stale_age = $now->modify("-{$config['staleage']} days")->format('Y-m-d H:i:s');
 
 $hasWork = false;
 
-/*
 // Pull latest doc repositories
 echo "Synchronising doc repositories\n";
 $syncCommands = array_merge($repoCleanupCommands, [$repoSyncCommand]);
@@ -531,7 +530,6 @@ foreach ($docRepos as $repo) {
     echo "OK\n";
 }
 echo "\n";
-*/
 
 // Connect to database
 echo "Setting up database connection... ";
