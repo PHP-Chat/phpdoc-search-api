@@ -514,7 +514,7 @@ if (!$hasWork) {
 // Build .manual.xml
 echo "Building manual XML (this may take some time)... ";
 chdir($phpDocBaseDir . '/base');
-do_exec('php "' . $phpDocBaseDir . '/base/configure.php" "--output=' . $tempFile . '"', $output, $exitCode);
+do_exec('php "' . $phpDocBaseDir . '/base/configure.php" "--output=' . $tempFile . '"');
 echo "OK\n\n";
 
 // Clean up doc repositories
