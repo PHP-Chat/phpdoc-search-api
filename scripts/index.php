@@ -1,436 +1,19 @@
 <?php
 
-class ClassRegistry
-{
-    private $classes = [];
-
-    private $pendingParents = [];
-
-    private $pendingInterfaces = [];
-
-    public function registerClass(ClassDef $class)
-    {
-        if (!isset($this->classes[$name = trim(strtolower($class->getName()))])) {
-            $this->classes[$name] = $class;
-
-            if (isset($this->pendingParents[$name])) {
-                foreach ($this->pendingParents[$name] as $child) {
-                    $child->setParent($class);
-                }
-            }
-
-            if (isset($this->pendingInterfaces[$name])) {
-                foreach ($this->pendingInterfaces[$name] as $implementor) {
-                    $implementor->addInterface($class);
-                }
-            }
-
-            unset($this->pendingParents[$name], $this->pendingInterfaces[$name]);
-        }
-    }
-
-    public function registerParent(ClassDef $class, $parentName)
-    {
-        $name = trim(strtolower($parentName));
-
-        if (isset($this->classes[$name])) {
-            $class->setParent($this->classes[$name]);
-        } else {
-            if (!isset($this->pendingParents[$name])) {
-                $this->pendingParents[$name] = [];
-            }
-
-            $this->pendingParents[$name][] = $class;
-        }
-    }
-
-    public function registerInterface(ClassDef $class, $interfaceName)
-    {
-        $name = trim(strtolower($interfaceName));
-
-        if (isset($this->classes[$name])) {
-            $class->addInterface($this->classes[$name]);
-        } else {
-            if (!isset($this->pendingInterfaces[$name])) {
-                $this->pendingInterfaces[$name] = [];
-            }
-
-            $this->pendingInterfaces[$name][] = $class;
-        }
-    }
-
-    public function getClasses()
-    {
-        return $this->classes;
-    }
-
-    public function getClassByName($className)
-    {
-        if (isset($this->classes[$name = strtolower(trim($className))])) {
-            return $this->classes[$name];
-        }
-    }
-
-    public function isRegistered($className)
-    {
-        return isset($this->classes[strtolower(trim($className))]);
-    }
-}
-
-class ClassDef
-{
-    private $isNormalised = false;
-
-    private $id;
-
-    private $slug;
-
-    private $name;
-
-    private $parent;
-
-    private $interfaces = [];
-
-    private $methods = [];
-
-    private $properties = [];
-
-    private $constants = [];
-
-    private function inheritMembers(ClassDef $class)
-    {
-        foreach ($class->getMethods() as $method) {
-            $this->addMethod($method);
-        }
-
-        foreach ($class->getProperties() as $property) {
-            $this->addProperty($property);
-        }
-
-        foreach ($class->getConstants() as $constant) {
-            $this->addConstant($constant);
-        }
-
-        foreach ($class->getInterfaces() as $interface) {
-            $this->addInterface($interface);
-        }
-    }
-
-    private function normaliseMembers()
-    {
-        if (!$this->isNormalised) {
-            if ($this->hasParent()) {
-                $this->inheritMembers($this->parent);
-            }
-
-            foreach ($this->interfaces as $interface) {
-                $this->inheritMembers($interface);
-            }
-
-            $this->isNormalised = true;
-        }
-    }
-
-    public function setId($id)
-    {
-        $this->id = $id;
-    }
-
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    public function setSlug($slug)
-    {
-        $this->slug = trim($slug);
-    }
-
-    public function getSlug()
-    {
-        return $this->slug;
-    }
-
-    public function setName($name)
-    {
-        $this->name = trim($name);
-    }
-
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    public function setParent(ClassDef $parent)
-    {
-        $this->parent = $parent;
-    }
-
-    public function hasParent()
-    {
-        return $this->parent !== null;
-    }
-
-    public function getParent()
-    {
-        return $this->parent;
-    }
-
-    public function addMethod(MethodDef $method)
-    {
-        if (!isset($this->methods[$methodName = strtolower($method->name)])) {
-            $this->methods[$methodName] = $method;
-
-            if ($method->ownerClass === null) {
-                $method->ownerClass = $this;
-            }
-        }
-    }
-
-    public function getMethods()
-    {
-        $this->normaliseMembers();
-
-        return $this->methods;
-    }
-
-    public function addProperty(PropDef $property)
-    {
-        if (!isset($this->properties[$propName = strtolower($property->name)])) {
-            $this->properties[$propName] = $property;
-
-            if ($property->ownerClass === null) {
-                $property->ownerClass = $this;
-            }
-        }
-    }
-
-    public function getProperties()
-    {
-        $this->normaliseMembers();
-
-        return $this->properties;
-    }
-
-    public function addConstant(ConstDef $constant)
-    {
-        if (!isset($this->constants[$constName = strtolower($constant->name)])) {
-            $this->constants[$constName] = $constant;
-
-            if ($constant->ownerClass === null) {
-                $constant->ownerClass = $this;
-            }
-        }
-    }
-
-    public function getConstants()
-    {
-        $this->normaliseMembers();
-
-        return $this->constants;
-    }
-
-    public function addInterface(ClassDef $interface)
-    {
-        if (!in_array($interface, $this->interfaces, true)) {
-            $this->interfaces[] = $interface;
-        }
-    }
-
-    public function getInterfaces()
-    {
-        $this->normaliseMembers();
-
-        return $this->interfaces;
-    }
-}
-
-class MethodDef
-{
-    public $slug;
-
-    public $name;
-
-    public $ownerClass;
-}
-
-class PropDef
-{
-    public $slug;
-
-    public $name;
-
-    public $ownerClass;
-}
-
-class ConstDef
-{
-    public $slug;
-
-    public $name;
-
-    public $ownerClass;
-}
-
-class ClassEntityFactory
-{
-    public function createClassDef()
-    {
-        return new ClassDef;
-    }
-
-    public function createMethodDef()
-    {
-        return new MethodDef;
-    }
-
-    public function createPropDef()
-    {
-        return new PropDef;
-    }
-
-    public function createConstDef()
-    {
-        return new ConstDef;
-    }
-}
-
-class ClassDefBuilder
-{
-    private $classRegistry;
-
-    private $classEntityFactory;
-
-    public function __construct(ClassRegistry $classRegistry, ClassEntityFactory $classEntityFactory, DOMXPath $xpath)
-    {
-        $this->classRegistry = $classRegistry;
-        $this->classEntityFactory = $classEntityFactory;
-        $this->xpath = $xpath;
-    }
-
-    private function getMemberName($fqName)
-    {
-        $nameParts = preg_split('/(::|->)/', trim($fqName), -1, PREG_SPLIT_NO_EMPTY);
-        return array_pop($nameParts);
-    }
-
-    private function processClassSynopsis(DOMElement $classEl, ClassDef $classDef)
-    {
-        $classDef->setSlug($classEl->getAttribute('xml:id'));
-
-        $synopsisInfo = $this->xpath->query(".//db:classsynopsis/db:classsynopsisinfo", $classEl);
-        if ($synopsisInfo->length) {
-            $currentEl = $synopsisInfo->item(0)->firstChild;
-
-            while ($currentEl !== null) {
-                if ($currentEl instanceof DOMElement) {
-                    switch (strtolower($currentEl->tagName)) {
-                        case 'ooclass':
-                            $modifier = $this->xpath->query('./db:modifier', $currentEl);
-                            if ($modifier->length && trim(strtolower($modifier->item(0)->textContent)) === 'extends') {
-                                $parent = $this->xpath->query('./db:classname', $currentEl);
-                                if ($parent->length) {
-                                    $this->classRegistry->registerParent($classDef, $parent->item(0)->textContent);
-                                }
-                            } else if ($classDef->getName() === null) {
-                                $className = $this->xpath->query('./db:classname', $currentEl);
-                                if ($className->length) {
-                                    $classDef->setName($className->item(0)->textContent);
-                                }
-                            }
-                            break;
-
-                        case 'oointerface':
-                            $interface = $this->xpath->query('./db:interfacename', $currentEl);
-                            if ($interface->length) {
-                                $this->classRegistry->registerInterface($classDef, $interface->item(0)->textContent);
-                            }
-                            break;
-                    }
-                }
-
-                $currentEl = $currentEl->nextSibling;
-            }
-        }
-
-        if ($classDef->getName() === null) {
-            $className = $this->xpath->query(".//db:classsynopsis/db:ooclass/db:classname", $classEl);
-            if ($className->length) {
-                $classDef->setName($className->item(0)->textContent);
-            } else {
-                $titleAbbrev = $this->xpath->query("./db:titleabbrev", $classEl);
-                if ($titleAbbrev->length) {
-                    $classDef->setName($titleAbbrev->item(0)->textContent);
-                }
-            }
-        }
-    }
-
-    private function processMethods(DOMElement $classEl, ClassDef $classDef)
-    {
-        $methodRefs = $this->xpath->query(".//db:refentry", $classEl);
-        foreach ($methodRefs as $methodRef) {
-            $methodDef = $this->classEntityFactory->createMethodDef();
-
-            $methodRefName = $this->xpath->query(".//db:refnamediv/db:refname", $methodRef);
-            if ($methodRefName->length) {
-                $methodDef->name = $this->getMemberName($methodRefName->item(0)->textContent);
-                $methodDef->slug = strtolower($methodRef->getAttribute('xml:id'));
-
-                $classDef->addMethod($methodDef);
-            }
-        }
-    }
-
-    private function processPropertiesAndConstants(DOMElement $classEl, ClassDef $classDef)
-    {
-        $propConstRefs = $this->xpath->query(".//db:classsynopsis/db:fieldsynopsis", $classEl);
-        foreach ($propConstRefs as $propConstRef) {
-            $isConst = false;
-            foreach ($this->xpath->query(".//db:modifier", $propConstRef) as $modifier) {
-                if (trim(strtolower($modifier->textContent)) === 'const') {
-                    $isConst = true;
-                }
-            }
-
-            $varName = $this->xpath->query(".//db:varname[@linkend]", $propConstRef);
-            if ($varName->length) {
-                $name = $this->getMemberName($varName->item(0)->textContent);
-                $slug = trim(strtolower($varName->item(0)->getAttribute('linkend')));
-
-                if ($isConst) {
-                    $constDef = $this->classEntityFactory->createConstDef();
-                    $constDef->name = $name;
-                    $constDef->slug = $slug;
-
-                    $classDef->addConstant($constDef);
-                } else {
-                    $propDef = $this->classEntityFactory->createPropDef();
-                    $propDef->name = $name;
-                    $propDef->slug = $slug;
-
-                    $classDef->addProperty($propDef);
-                }
-            }
-        }
-    }
-
-    public function build(DOMElement $classEl)
-    {
-        $classDef = $this->classEntityFactory->createClassDef();
-
-        $this->processClassSynopsis($classEl, $classDef);
-
-        if (!$this->classRegistry->isRegistered($classDef->getName())) {
-            $this->processMethods($classEl, $classDef);
-            $this->processPropertiesAndConstants($classEl, $classDef);
-
-            $this->classRegistry->registerClass($classDef);
-
-            return $classDef;
-        }
-    }
-}
+use \PHPDocSearch\Indexer\ManualXPath,
+    \PHPDocSearch\Indexer\BookRegistry,
+    \PHPDocSearch\Indexer\ClassRegistry,
+    \PHPDocSearch\Indexer\BookBuilder,
+    \PHPDocSearch\Indexer\ClassBuilder,
+    \PHPDocSearch\Indexer\ConfigOptionBuilder,
+    \PHPDocSearch\Indexer\ConstantBuilder,
+    \PHPDocSearch\Indexer\FunctionBuilder,
+    \PHPDocSearch\Symbols\BookFactory,
+    \PHPDocSearch\Symbols\ClassFactory,
+    \PHPDocSearch\Symbols\ClassMemberFactory,
+    \PHPDocSearch\Symbols\ConfigOptionFactory,
+    \PHPDocSearch\Symbols\ConstantFactory,
+    \PHPDocSearch\Symbols\FunctionFactory;
 
 function fatal_error($msg)
 {
@@ -446,6 +29,8 @@ function do_exec($cmd)
         fatal_error("Command '$cmd' failed with error code $exitCode");
     }
 }
+
+require __DIR__ . '/autoload.php';
 
 $docRepos = ['base', 'en'];
 $repoSyncCommand = 'git pull -q origin master';
@@ -478,12 +63,12 @@ $tempFile = $tempDir . '/.manual.xml';
 echo "OK\n\n";
 
 // Get a standard timestamp for queries
-$now = new DateTime;
+$now = new \DateTime('now');
 $last_seen = $now->format('Y-m-d H:i:s');
 $stale_age = $now->modify("-{$config['staleage']} days")->format('Y-m-d H:i:s');
 
 $hasWork = false;
-
+/*
 // Pull latest doc repositories
 echo "Synchronising doc repositories\n";
 $syncCommands = array_merge($repoCleanupCommands, [$repoSyncCommand]);
@@ -531,10 +116,11 @@ foreach ($docRepos as $repo) {
 }
 echo "\n";
 
+
 // Connect to database
 echo "Setting up database connection... ";
 try {
-    $db = new PDO("mysql:host={$config['dbhost']};dbname={$config['dbname']};charset=utf8", $config['dbuser'], $config['dbpass']);
+    $db = new \PDO("mysql:host={$config['dbhost']};dbname={$config['dbname']};charset=utf8", $config['dbuser'], $config['dbpass']);
     $db->setAttribute(PDO::ATTR_ERRMODE,            PDO::ERRMODE_EXCEPTION);
     $db->setAttribute(PDO::ATTR_EMULATE_PREPARES,   false);
     $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
@@ -614,6 +200,21 @@ try {
     $bookFuncInsertStmt->bindParam(':iname',     $name,      PDO::PARAM_STR);
     $bookFuncInsertStmt->bindParam(':uname',     $name,      PDO::PARAM_STR);
     $bookFuncInsertStmt->bindParam(':last_seen', $last_seen, PDO::PARAM_STR);
+
+    $controlStructInsertStmt = $db->prepare("
+        INSERT INTO `controlstructures`
+            (`slug`, `name`)
+        VALUES
+            (:islug, :name)
+        ON DUPLICATE KEY UPDATE
+            `slug` = :uslug,
+            `last_seen` = :last_seen
+    ");
+    $controlStructInsertStmt->bindParam(':book_id',   $book_id,   PDO::PARAM_INT);
+    $controlStructInsertStmt->bindParam(':islug',     $slug,      PDO::PARAM_STR);
+    $controlStructInsertStmt->bindParam(':name',      $name,      PDO::PARAM_STR);
+    $controlStructInsertStmt->bindParam(':uslug',     $slug,      PDO::PARAM_STR);
+    $controlStructInsertStmt->bindParam(':last_seen', $last_seen, PDO::PARAM_STR);
 
     $bookClassInsertStmt = $db->prepare("
         INSERT INTO `classes`
@@ -696,118 +297,70 @@ try {
     $bookClassConstantInsertStmt->bindParam(':uowner_class_id', $owner_class_id, PDO::PARAM_INT);
     $bookClassConstantInsertStmt->bindParam(':uslug',           $slug,           PDO::PARAM_STR);
     $bookClassConstantInsertStmt->bindParam(':last_seen',       $last_seen,      PDO::PARAM_STR);
+
+    $cleanupStmts = [
+        $db->prepare("
+            DELETE FROM `books`
+            WHERE `last_seen` < :last_seen
+        ")
+    ];
 } catch (PDOException $e) {
     echo "Failed\n";
     fatal_error("Caught PDOException: " . $e->getMessage());
 }
 echo "OK\n\n";
+*/
 
 // Set up the DOM
 echo "Loading manual XML... ";
-$doc = new DOMDocument;
+$doc = new \DOMDocument;
 if (!$doc->load($tempFile)) {
     echo "Failed\n";
     fatal_error("Unable to load manual XML");
 }
-
-$xpath = new DOMXPath($doc);
-$xpath->registerNamespace('db', 'http://docbook.org/ns/docbook');
-$xpath->registerNamespace('pd', 'http://php.net/ns/phpdoc');
-$xpath->registerNamespace('xml', 'http://www.w3.org/XML/1998/namespace');
-$xpath->registerNamespace('php', 'http://php.net/xpath');
-$xpath->registerPHPFunctions();
 echo "OK\n\n";
 
 // Let's do some indexing!
 echo "Indexing manual\n";
-$classRegistry = new ClassRegistry();
-$classDefBuilder = new ClassDefBuilder($classRegistry, new ClassEntityFactory, $xpath);
 
-$books = $xpath->query('//db:book[starts-with(@xml:id, "book.")]');
-$classDefs = $pendingParents = [];
-foreach ($books as $book) {
-    // Get meta about the book
-    $bookSlug = $slug = explode('.', $book->getAttribute('xml:id'), 2)[1];
+$xpath = new ManualXPath(new \DOMXPath($doc));
 
-    $titleNodes = $xpath->query('./db:title', $book);
-    if ($titleNodes->length) {
-        $full_name = trim($titleNodes->item(0)->firstChild->data);
-    } else {
-        $full_name = '';
-    }
+$bookRegistry = new BookRegistry;
+$classRegistry = new ClassRegistry;
 
-    $titleAbbrevNodes = $xpath->query('./db:titleabbrev', $book);
-    if ($titleAbbrevNodes->length) {
-        $short_name = trim($titleAbbrevNodes->item(0)->firstChild->data);
-    } else {
-        $short_name = $full_name;
-    }
+$bookBuilder = new BookBuilder($bookRegistry, new BookFactory, $xpath);
+$configOptionBuilder = new ConfigOptionBuilder(new ConfigOptionFactory, $xpath);
+$constantBuilder = new ConstantBuilder(new ConstantFactory, $xpath);
+$functionBuilder = new FunctionBuilder(new FunctionFactory, $xpath);
+$classBuilder = new ClassBuilder($classRegistry, new ClassFactory, new ClassMemberFactory, $xpath);
 
-    echo "Indexing book $slug ($full_name)... ";
+foreach ($xpath->query('//db:book[starts-with(@xml:id, "book.")]') as $bookEl) {
+    $book = $bookBuilder->build($bookEl);
 
-    $bookInsertStmt->execute();
-    $bookIdSelectStmt->execute();
-    $book_id = (int) $bookIdSelectStmt->fetchColumn();
-    $bookIdSelectStmt->closeCursor();
+    echo "Indexing book " . $book->getSlug() . " (" . $book->getName() . ")... ";
 
     // Config options
-    $configOptions = $xpath->query(".//db:section[@xml:id='$bookSlug.configuration']//db:varlistentry[@xml:id]", $book);
-    foreach ($configOptions as $opt) {
-        $slug = $opt->getAttribute('xml:id');
-        $name = $type = '';
-
-        $nameNodes = $xpath->query("./db:term/db:parameter", $opt);
-        if ($nameNodes->length) {
-            $name = trim($nameNodes->item(0)->textContent);
-        }
-
-        $typeNodes = $xpath->query("./db:term/db:type", $opt);
-        if ($typeNodes->length) {
-            $type = trim($typeNodes->item(0)->textContent);
-        }
-
-        $bookIniInsertStmt->execute();
+    $query = ".//db:section[@xml:id='" . $book->getSlug() . ".configuration']//db:varlistentry[@xml:id]";
+    foreach ($xpath->query($query, $bookEl) as $varListEntry) {
+        $book->addGlobalSymbol($configOptionBuilder->build($varListEntry));
     }
 
     // Constants
-    $constants = $xpath->query(".//db:appendix[@xml:id='$bookSlug.constants']//db:varlistentry[@xml:id]", $book);
-    foreach ($constants as $const) {
-        $slug = $const->getAttribute('xml:id');
-        $name = $type = '';
-
-        $nameNodes = $xpath->query("./db:term/db:constant", $const);
-        if ($nameNodes->length) {
-            $name = trim($nameNodes->item(0)->textContent);
-        }
-
-        $typeNodes = $xpath->query("./db:term/db:type", $const);
-        if ($typeNodes->length) {
-            $type = trim($typeNodes->item(0)->textContent);
-        }
-
-        $bookConstInsertStmt->execute();
+    $query = ".//db:appendix[@xml:id='" . $book->getSlug() . ".constants']//db:varlistentry[@xml:id]";
+    foreach ($xpath->query($query, $bookEl) as $varListEntry) {
+        $book->addGlobalSymbol($constantBuilder->build($varListEntry));
     }
 
     // Functions
-    $functions = $xpath->query(".//db:reference[@xml:id='ref.$bookSlug']//db:refentry[starts-with(@xml:id, 'function.')]", $book);
-    foreach ($functions as $func) {
-        $slug = $func->getAttribute('xml:id');
-
-        $name = $xpath->query("./db:refnamediv/db:refname", $func)->item(0)->firstChild->data;
-
-        $bookFuncInsertStmt->execute();
+    $query = ".//db:reference[@xml:id='ref." . $book->getSlug() . "']//db:refentry[starts-with(@xml:id, 'function.')]";
+    foreach ($xpath->query($query, $bookEl) as $refEntry) {
+        $book->addGlobalSymbol($constantBuilder->build($refEntry));
     }
 
     // Classes
-    $classRefs = $xpath->query(".//pd:classref | .//pd:exceptionref", $book);
-    foreach ($classRefs as $classRef) {
-        if ($classDef = $classDefBuilder->build($classRef)) {
-            $name = $classDef->getName();
-            $slug = $classDef->getSlug();
-            $bookClassInsertStmt->execute();
-
-            $classDef->setId($db->lastInsertId());
-        }
+    $query = ".//pd:classref | .//pd:exceptionref";
+    foreach ($xpath->query($query, $bookEl) as $classRef) {
+        $book->addGlobalSymbol($classBuilder->build($classRef));
     }
 
     echo "OK\n";
@@ -815,62 +368,55 @@ foreach ($books as $book) {
 
 $book_id = null;
 
-echo "Indexing error constants... ";
-$rows = $xpath->query(".//db:appendix[@xml:id='errorfunc.constants']//db:row[@xml:id]");
-foreach ($rows as $row) {
-    $slug = $row->getAttribute('xml:id');
+/*
+echo "Indexing control structures... ";
+$sections = $xpath->query(".//db:section[@xml:id='language.control-structures']//db:sect1[@xml:id]/db:title/db:literal/../..");
+foreach ($sections as $sect) {
+    $slug = $sect->getAttribute('xml:id');
     $name = $type = '';
 
-    $nameNodes = $xpath->query("./db:entry/db:constant", $row);
-    if ($nameNodes->length) {
-        $name = trim($nameNodes->item(0)->textContent);
+    $nameNodes = $xpath->query("./db:title/db:literal", $sect);
+    foreach ($nameNodes as $nameNode) {
+        if (preg_match('/^\S+$/', trim($nameNode->textContent), $match)) {
+            $name = $match[0];
+            $controlStructInsertStmt->execute();
+            break;
+        }
     }
-
-    $typeNodes = $xpath->query("./db:entry/db:type", $row);
-    if ($typeNodes->length) {
-        $type = trim($typeNodes->item(0)->textContent);
-    }
-
-    $bookConstInsertStmt->execute();
 }
 echo "OK\n";
+*/
+
+
+echo "Indexing error constants... ";
+$orphanedConstants = [];
+foreach ($xpath->query(".//db:appendix[@xml:id='errorfunc.constants']//db:row[@xml:id]") as $row) {
+    $orphanedConstants[] = $constantBuilder->build($row);
+}
+echo "OK\n";
+
+
 
 echo "Indexing configuration options with no owner book... ";
-$varListEntries = $xpath->query(".//db:section[@xml:id='ini.core']//db:varlistentry[@xml:id]");
-foreach ($varListEntries as $varListEntry) {
-    $slug = $varListEntry->getAttribute('xml:id');
-    $name = $type = '';
-
-    $nameNodes = $xpath->query("./db:term/db:parameter", $varListEntry);
-    if ($nameNodes->length) {
-        $name = trim($nameNodes->item(0)->textContent);
-    }
-
-    $typeNodes = $xpath->query("./db:term/db:type", $varListEntry);
-    if ($typeNodes->length) {
-        $type = trim($typeNodes->item(0)->textContent);
-    }
-
-    $bookIniInsertStmt->execute();
+$orphanedConfigOptions = [];
+foreach ($xpath->query(".//db:section[@xml:id='ini.core']//db:varlistentry[@xml:id]") as $varListEntry) {
+    $orphanedConfigOptions[] = $configOptionBuilder->build($varListEntry);
 }
 echo "OK\n";
+
+
 
 echo "Indexing classes with no owner book... ";
 $classRefs = $xpath->query(".//pd:classref | .//pd:exceptionref");
 foreach ($classRefs as $classRef) {
-    if ($classDef = $classDefBuilder->build($classRef)) {
-        $name = $classDef->getName();
-        $slug = $classDef->getSlug();
-        $bookClassInsertStmt->execute();
-
-        $classDef->setId($db->lastInsertId());
-    }
+    $classBuilder->build($classRef);
 }
 echo "OK\n";
 
 
+
 echo "Storing class members... ";
-foreach ($classRegistry->getClasses() as $class) {
+foreach ($classRegistry as $class) {
     $class_id = $id = $class->getId();
 
     if ($class->hasParent()) {
