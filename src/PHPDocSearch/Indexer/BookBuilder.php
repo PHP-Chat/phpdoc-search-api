@@ -12,7 +12,7 @@ class BookBuilder
 
     private $xpath;
 
-    public function __construct(BookRegistry $bookRegistry, BookFactory $bookFactory, ManualXPath $xpath)
+    public function __construct(BookRegistry $bookRegistry, BookFactory $bookFactory, ManualXMLWrapper $xpath)
     {
         $this->bookRegistry = $bookRegistry;
         $this->bookFactory = $bookFactory;

@@ -10,7 +10,7 @@ class FunctionBuilder
 
     private $xpath;
 
-    public function __construct(FunctionFactory $functionFactory, ManualXPath $xpath)
+    public function __construct(FunctionFactory $functionFactory, ManualXMLWrapper $xpath)
     {
         $this->functionFactory = $functionFactory;
         $this->xpath = $xpath;

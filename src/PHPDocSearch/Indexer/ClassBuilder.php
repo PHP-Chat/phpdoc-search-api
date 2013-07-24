@@ -19,7 +19,7 @@ class ClassBuilder
         ClassRegistry $classRegistry,
         ClassFactory $classFactory,
         ClassMemberFactory $classMemberFactory,
-        ManualXPath $xpath
+        ManualXMLWrapper $xpath
     ) {
         $this->classRegistry      = $classRegistry;
         $this->classFactory       = $classFactory;

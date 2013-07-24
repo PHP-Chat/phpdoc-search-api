@@ -10,7 +10,7 @@ class ConstantBuilder
 
     private $xpath;
 
-    public function __construct(ConstantFactory $constantFactory, ManualXPath $xpath)
+    public function __construct(ConstantFactory $constantFactory, ManualXMLWrapper $xpath)
     {
         $this->constantFactory = $constantFactory;
         $this->xpath = $xpath;

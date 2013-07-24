@@ -10,7 +10,7 @@ class ConfigOptionBuilder
 
     private $xpath;
 
-    public function __construct(ConfigOptionFactory $configOptionFactory, ManualXPath $xpath)
+    public function __construct(ConfigOptionFactory $configOptionFactory, ManualXMLWrapper $xpath)
     {
         $this->configOptionFactory = $configOptionFactory;
         $this->xpath = $xpath;
