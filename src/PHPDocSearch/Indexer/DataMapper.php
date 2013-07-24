@@ -109,23 +109,23 @@ class DataMapper
 
     public function insertClass(GlobalClass $class)
     {
-        $this->logger->log('Inserting class ' . $class->getName() . '...');
-
-        if (!isset($this->statements['insertClass'])) {
-            $this->statements['insertClass'] = $this->db->prepare("
-                INSERT INTO `classes`
-                    (`book_id`, `slug`, `name`, `parent`)
-                VALUES
-                    (:book_id, :slug, :name, :iparent)
-                ON DUPLICATE KEY UPDATE
-                    `parent` = :uparent,
-                    `last_seen` = :last_seen
-            ");
-
-            $this->statements['insertClass']->bindValue('last_seen', $this->startTime);
-        }
-
         if ($class->getId() === null) {
+            $this->logger->log('Inserting class ' . $class->getName() . '...');
+
+            if (!isset($this->statements['insertClass'])) {
+                $this->statements['insertClass'] = $this->db->prepare("
+                    INSERT INTO `classes`
+                        (`book_id`, `slug`, `name`, `parent`)
+                    VALUES
+                        (:book_id, :slug, :name, :iparent)
+                    ON DUPLICATE KEY UPDATE
+                        `parent` = :uparent,
+                        `last_seen` = :last_seen
+                ");
+
+                $this->statements['insertClass']->bindValue('last_seen', $this->startTime);
+            }
+
             $stmt = $this->statements['insertClass'];
 
             $parent = $class->getParent();
