@@ -400,4 +400,9 @@ echo "Writing config file... ";
 file_put_contents($installBase . '/config.php', $configFile);
 echo "OK\n\n";
 
+if (confirm("Do you want to run the indexing script now?", true)) {
+    $cmd = 'php "' . realpath($installBase . '/api/scripts/index.php') . '" --nosync';
+    passthru($cmd);
+}
+
 echo "Done\n";
