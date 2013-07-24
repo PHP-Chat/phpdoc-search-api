@@ -2,7 +2,8 @@
 
 namespace PHPDocSearch\Indexer;
 
-use \PHPDocSearch\CLIEnvironment,
+use \PHPDocSearch\Environment,
+    \PHPDocSearch\Logger,
     \PHPDocSearch\Symbols\Book,
     \PHPDocSearch\Symbols\ClassConstant,
     \PHPDocSearch\Symbols\ClassMethod,
@@ -15,20 +16,29 @@ use \PHPDocSearch\CLIEnvironment,
 
 class DataMapper
 {
+    private $env;
+
     private $db;
+
+    private $logger;
 
     private $startTime;
 
     private $statements = [];
 
-    public function __construct(\PDO $db, CLIEnvironment $env)
+    public function __construct(Environment $env, callable $dataProvider, Logger $logger = null)
     {
-        $this->db = $db;
+        $this->env = $env;
+        $this->db = $dataProvider();
+        $this->logger = $logger;
+
         $this->startTime = $env->getStartTime()->format('Y-m-d H:i:s');
     }
 
     public function insertBook(Book $book)
     {
+        $this->logger->log('Inserting book ' . $book->getName() . '...');
+
         if (!isset($this->statements['insertBook'])) {
             $this->statements['insertBook'] = $this->db->prepare("
                 INSERT INTO `books`
@@ -71,6 +81,8 @@ class DataMapper
 
     public function insertControlStructure(ControlStructure $controlStructure)
     {
+        $this->logger->log('Inserting control structure ' . $controlStructure->getName());
+
         if (!isset($this->statements['insertControlStructure'])) {
             $this->statements['insertControlStructure'] = $this->db->prepare("
                 INSERT INTO `controlstructures`
@@ -97,6 +109,8 @@ class DataMapper
 
     public function insertClass(GlobalClass $class)
     {
+        $this->logger->log('Inserting class ' . $class->getName() . '...');
+
         if (!isset($this->statements['insertClass'])) {
             $this->statements['insertClass'] = $this->db->prepare("
                 INSERT INTO `classes`
@@ -104,7 +118,7 @@ class DataMapper
                 VALUES
                     (:book_id, :slug, :name, :iparent)
                 ON DUPLICATE KEY UPDATE
-                    `parent` = :uparent
+                    `parent` = :uparent,
                     `last_seen` = :last_seen
             ");
 
@@ -120,11 +134,14 @@ class DataMapper
             }
             $parentId = $parent ? $parent->getId() : null;
 
-            $stmt->bindValue(':book_id', $class->getBook()->getId(), \PDO::PARAM_INT);
-            $stmt->bindValue(':slug',    $class->getSlug(),          \PDO::PARAM_STR);
-            $stmt->bindValue(':name',    $class->getName(),          \PDO::PARAM_STR);
-            $stmt->bindValue(':iparent', $parentId,                  \PDO::PARAM_INT);
-            $stmt->bindValue(':uparent', $parentId,                  \PDO::PARAM_INT);
+            $book = $class->getBook();
+            $bookId = $book ? $book->getId() : null;
+
+            $stmt->bindValue(':book_id', $bookId,           \PDO::PARAM_INT);
+            $stmt->bindValue(':slug',    $class->getSlug(), \PDO::PARAM_STR);
+            $stmt->bindValue(':name',    $class->getName(), \PDO::PARAM_STR);
+            $stmt->bindValue(':iparent', $parentId,         \PDO::PARAM_INT);
+            $stmt->bindValue(':uparent', $parentId,         \PDO::PARAM_INT);
 
             $stmt->execute();
 
@@ -146,6 +163,8 @@ class DataMapper
 
     public function insertConfigOption(ConfigOption $configOption)
     {
+        $this->logger->log('  Inserting config option ' . $configOption->getName());
+
         if (!isset($this->statements['insertConfigOption'])) {
             $this->statements['insertConfigOption'] = $this->db->prepare("
                 INSERT INTO `inisettings`
@@ -178,6 +197,8 @@ class DataMapper
 
     public function insertConstant(GlobalConstant $constant)
     {
+        $this->logger->log('  Inserting constant ' . $constant->getName());
+
         if (!isset($this->statements['insertConstant'])) {
             $this->statements['insertConstant'] = $this->db->prepare("
                 INSERT INTO `constants`
@@ -210,6 +231,8 @@ class DataMapper
 
     public function insertFunction(GlobalFunction $function)
     {
+        $this->logger->log('  Inserting function ' . $function->getName());
+
         if (!isset($this->statements['insertFunction'])) {
             $this->statements['insertFunction'] = $this->db->prepare("
                 INSERT INTO `functions`
@@ -236,6 +259,8 @@ class DataMapper
 
     private function insertClassMethod(ClassMethod $method, GlobalClass $memberClass)
     {
+        $this->logger->log('  Inserting method ' . $method->getName());
+
         if (!isset($this->statements['insertClassMethod'])) {
             $this->statements['insertClassMethod'] = $this->db->prepare("
                 INSERT INTO `classmethods`
@@ -253,24 +278,28 @@ class DataMapper
 
         $stmt = $this->statements['insertClassMethod'];
 
+        $classId = $memberClass->getId();
+
         $ownerClass = $method->getOwnerClass();
         if ($ownerClass->getId() === null) {
             $this->insertClass($ownerClass);
         }
         $ownerClassId = $ownerClass->getId();
 
-        $stmt->bindValue(':class_id',        $classId,           \PDO::PARAM_INT);
-        $stmt->bindValue(':iowner_class_id', $ownerClassId,      \PDO::PARAM_INT);
-        $stmt->bindValue(':uowner_class_id', $ownerClassId,      \PDO::PARAM_INT);
-        $stmt->bindValue(':islug',           $method->getSlug(), \PDO::PARAM_STR);
-        $stmt->bindValue(':uslug',           $method->getSlug(), \PDO::PARAM_STR);
-        $stmt->bindValue(':name',            $method->getName(), \PDO::PARAM_STR);
+        $stmt->bindValue(':class_id',        $memberClass->getId(), \PDO::PARAM_INT);
+        $stmt->bindValue(':iowner_class_id', $ownerClassId,         \PDO::PARAM_INT);
+        $stmt->bindValue(':uowner_class_id', $ownerClassId,         \PDO::PARAM_INT);
+        $stmt->bindValue(':islug',           $method->getSlug(),    \PDO::PARAM_STR);
+        $stmt->bindValue(':uslug',           $method->getSlug(),    \PDO::PARAM_STR);
+        $stmt->bindValue(':name',            $method->getName(),    \PDO::PARAM_STR);
 
         $stmt->execute();
     }
 
     private function insertClassProperty(ClassProperty $property, GlobalClass $memberClass)
     {
+        $this->logger->log('  Inserting property ' . $property->getName());
+
         if (!isset($this->statements['insertClassProperty'])) {
             $this->statements['insertClassProperty'] = $this->db->prepare("
                 INSERT INTO `classprops`
@@ -306,6 +335,8 @@ class DataMapper
 
     private function insertClassConstant(ClassConstant $constant, GlobalClass $memberClass)
     {
+        $this->logger->log('  Inserting constant ' . $constant->getName());
+
         if (!isset($this->statements['insertClassConstant'])) {
             $this->statements['insertClassConstant'] = $this->db->prepare("
                 INSERT INTO `classprops`

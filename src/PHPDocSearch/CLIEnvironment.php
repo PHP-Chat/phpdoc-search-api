@@ -10,11 +10,14 @@ class CLIEnvironment extends Environment
 
     private $startTime;
 
-    public function __construct($applicationBaseDir, array $argv)
+    public function __construct($baseDir, Config $config, array $argv)
     {
-        $this->baseDir = $applicationBaseDir;
+        $this->setBaseDir($baseDir);
+        $this->config = $config;
         $this->argv = $argv;
+
         $this->startTime = new \DateTime('now');
+        $this->parseArgv();
     }
 
     private function parseArgv()
@@ -35,19 +38,11 @@ class CLIEnvironment extends Environment
 
     public function hasArg($name)
     {
-        if (!isset($this->args)) {
-            $this->parseArgv();
-        }
-
         return isset($this->args[strtolower($name)]);
     }
 
     public function getArg($name, $defaultValue = null)
     {
-        if (!isset($this->args)) {
-            $this->parseArgv();
-        }
-
         if (isset($this->args[$name = strtolower($name)])) {
             return $this->args[$name];
         }

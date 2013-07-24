@@ -7,24 +7,14 @@ use \PHPDocSearch\Symbols\ClassFactory,
 
 class ClassBuilder
 {
-    private $classRegistry;
-
     private $classFactory;
 
     private $classMemberFactory;
 
-    private $xpath;
-
-    public function __construct(
-        ClassRegistry $classRegistry,
-        ClassFactory $classFactory,
-        ClassMemberFactory $classMemberFactory,
-        ManualXMLWrapper $xpath
-    ) {
-        $this->classRegistry      = $classRegistry;
+    public function __construct(ClassFactory $classFactory, ClassMemberFactory $classMemberFactory)
+    {
         $this->classFactory       = $classFactory;
         $this->classMemberFactory = $classMemberFactory;
-        $this->xpath              = $xpath;
     }
 
     private function getMemberName($fqName)
@@ -33,47 +23,47 @@ class ClassBuilder
         return array_pop($nameParts);
     }
 
-    private function processClassSynopsis($baseEl, $class)
+    private function processClassSynopsis($baseEl, $class, $xmlWrapper, $classRegistry)
     {
         $class->setSlug($baseEl->getAttribute('xml:id'));
 
-        foreach ($this->xpath->query(".//db:classsynopsis/db:classsynopsisinfo/*", $baseEl) as $infoEl) {
+        foreach ($xmlWrapper->query(".//db:classsynopsis/db:classsynopsisinfo/*", $baseEl) as $infoEl) {
             switch (strtolower($infoEl->tagName)) {
                 case 'ooclass':
-                    if (!$classNameEl = $this->xpath->getFirst('./db:classname', $infoEl)) {
+                    if (!$classNameEl = $xmlWrapper->getFirst('./db:classname', $infoEl)) {
                         continue 2;
                     }
                     $className = $classNameEl->textContent;
 
-                    $modifier = $this->xpath->getFirst('./db:modifier', $infoEl);
+                    $modifier = $xmlWrapper->getFirst('./db:modifier', $infoEl);
                     if ($modifier && trim(strtolower($modifier->textContent)) === 'extends') {
-                        $this->classRegistry->acquireParent($class, $className);
+                        $classRegistry->acquireParent($class, $className);
                     } else {
                         $class->setName($className);
                     }
                     break;
 
                 case 'oointerface':
-                    if ($interface = $this->xpath->getFirst('./db:interfacename', $infoEl)) {
-                        $this->classRegistry->acquireInterface($class, $interface->textContent);
+                    if ($interface = $xmlWrapper->getFirst('./db:interfacename', $infoEl)) {
+                        $classRegistry->acquireInterface($class, $interface->textContent);
                     }
                     break;
             }
         }
 
         if ($class->getName() === null) {
-            if ($className = $this->xpath->getFirst(".//db:classsynopsis/db:ooclass/db:classname", $baseEl)) {
+            if ($className = $xmlWrapper->getFirst(".//db:classsynopsis/db:ooclass/db:classname", $baseEl)) {
                 $class->setName($className->textContent);
-            } else if ($titleAbbrev = $this->xpath->getFirst("./db:titleabbrev", $baseEl)) {
+            } else if ($titleAbbrev = $xmlWrapper->getFirst("./db:titleabbrev", $baseEl)) {
                 $class->setName($titleAbbrev->textContent);
             }
         }
     }
 
-    private function processMethods($baseEl, $class)
+    private function processMethods($baseEl, $class, $xmlWrapper)
     {
-        foreach ($this->xpath->query(".//db:refentry", $baseEl) as $refEntry) {
-            if ($refName = $this->xpath->getFirst(".//db:refnamediv/db:refname", $refEntry)) {
+        foreach ($xmlWrapper->query(".//db:refentry", $baseEl) as $refEntry) {
+            if ($refName = $xmlWrapper->getFirst(".//db:refnamediv/db:refname", $refEntry)) {
                 $name = $this->getMemberName($refName->textContent);
                 $slug = $refEntry->getAttribute('xml:id');
 
@@ -87,18 +77,18 @@ class ClassBuilder
         }
     }
 
-    private function processPropertiesAndConstants($baseEl, $class)
+    private function processPropertiesAndConstants($baseEl, $class, $xmlWrapper)
     {
-        foreach ($this->xpath->query(".//db:classsynopsis/db:fieldsynopsis", $baseEl) as $fieldRef) {
+        foreach ($xmlWrapper->query(".//db:classsynopsis/db:fieldsynopsis", $baseEl) as $fieldRef) {
             $isConst = false;
-            foreach ($this->xpath->query(".//db:modifier", $fieldRef) as $modifier) {
+            foreach ($xmlWrapper->query(".//db:modifier", $fieldRef) as $modifier) {
                 if (trim(strtolower($modifier->textContent)) === 'const') {
                     $isConst = true;
                     break;
                 }
             }
 
-            if ($varName = $this->xpath->getFirst(".//db:varname[@linkend]", $fieldRef)) {
+            if ($varName = $xmlWrapper->getFirst(".//db:varname[@linkend]", $fieldRef)) {
                 $name = $this->getMemberName($varName->textContent);
                 $slug = $varName->getAttribute('linkend');
 
@@ -114,17 +104,17 @@ class ClassBuilder
         }
     }
 
-    public function build(\DOMElement $baseEl)
+    public function build(\DOMElement $baseEl, ManualXMLWrapper $xmlWrapper, ClassRegistry $classRegistry)
     {
         $class = $this->classFactory->create();
 
-        $this->processClassSynopsis($baseEl, $class);
+        $this->processClassSynopsis($baseEl, $class, $xmlWrapper, $classRegistry);
 
-        if (!$this->classRegistry->isRegistered($class->getName())) {
-            $this->processMethods($baseEl, $class);
-            $this->processPropertiesAndConstants($baseEl, $class);
+        if (!$classRegistry->isRegistered($class->getName())) {
+            $this->processMethods($baseEl, $class, $xmlWrapper);
+            $this->processPropertiesAndConstants($baseEl, $class, $xmlWrapper);
 
-            $this->classRegistry->register($class);
+            $classRegistry->register($class);
 
             return $class;
         }

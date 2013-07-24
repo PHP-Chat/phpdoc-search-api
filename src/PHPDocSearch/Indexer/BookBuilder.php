@@ -6,28 +6,22 @@ use \PHPDocSearch\Symbols\BookFactory;
 
 class BookBuilder
 {
-    private $bookRegistry;
-
     private $bookFactory;
 
-    private $xpath;
-
-    public function __construct(BookRegistry $bookRegistry, BookFactory $bookFactory, ManualXMLWrapper $xpath)
+    public function __construct(BookFactory $bookFactory)
     {
-        $this->bookRegistry = $bookRegistry;
         $this->bookFactory = $bookFactory;
-        $this->xpath = $xpath;
     }
 
-    public function build(\DOMElement $baseEl)
+    public function build(\DOMElement $baseEl, ManualXMLWrapper $xmlWrapper, BookRegistry $bookRegistry)
     {
         $fullName = '';
-        if ($title = $this->xpath->getFirst('./db:title', $baseEl)) {
+        if ($title = $xmlWrapper->getFirst('./db:title', $baseEl)) {
             $fullName = trim($title->textContent);
         }
 
         $shortName = $fullName;
-        if ($titleAbbrev = $this->xpath->getFirst('./db:titleabbrev', $baseEl)) {
+        if ($titleAbbrev = $xmlWrapper->getFirst('./db:titleabbrev', $baseEl)) {
             $shortName = trim($titleAbbrev->textContent);
         }
 
@@ -39,7 +33,7 @@ class BookBuilder
         $book->setShortName($shortName);
         $book->setSlug($slug);
 
-        $this->bookRegistry->register($book);
+        $bookRegistry->register($book);
 
         return $book;
     }

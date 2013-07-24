@@ -2,27 +2,28 @@
 
 namespace PHPDocSearch;
 
-class Environment
+abstract class Environment
 {
-    private $config;
+    protected $config;
 
     protected $baseDir;
 
-    public function getConfigOption($name)
+    public function setBaseDir($path)
     {
-        if (!isset($this->config)) {
-            $config = [];
-            require $this->baseDir . '/config.php';
-            $this->config = $config;
-        }
-
-        if (isset($this->config[$name])) {
-            return $this->config[$name];
-        }
+        $this->baseDir = realpath($path);
     }
 
     public function getBaseDir()
     {
         return $this->baseDir;
     }
+
+    public function getConfig()
+    {
+        return $this->config;
+    }
+
+    abstract public function hasArg($name);
+
+    abstract public function getArg($name, $defaultValue = null);
 }

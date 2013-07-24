@@ -4,14 +4,28 @@ namespace PHPDocSearch\Indexer;
 
 class ManualXMLWrapper
 {
+    private $docPath;
+
+    private $keepFile;
+
     private $doc;
 
     private $xpath;
 
-    public function __construct($docPath)
+    public function __construct($docPath, $keepFile)
+    {
+        $this->docPath = $docPath;
+        $this->keepFile = $keepFile;
+
+        $this->loadDocument();
+    }
+
+    private function loadDocument()
     {
         $this->doc = new \DOMDocument;
-        $this->doc->load($docPath);
+        if (!$this->doc->load($this->docPath)) {
+            throw new \RuntimeException('Loading manual XML document failed');
+        }
 
         $this->xpath = new \DOMXPath($this->doc);
         $this->xpath->registerNamespace('db', 'http://docbook.org/ns/docbook');
@@ -37,5 +51,9 @@ class ManualXMLWrapper
     {
         $this->doc = $this->xpath = null;
         gc_collect_cycles();
+
+        if (!$this->keepFile) {
+            unlink($this->docPath);
+        }
     }
 }

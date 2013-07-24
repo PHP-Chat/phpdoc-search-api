@@ -1,231 +1,82 @@
 <?php
 
-use \PHPDocSearch\CLIEnvironment,
-    \PHPDocSearch\PDOBuilder,
-    \PHPDocSearch\Indexer\DataMapper,
-    \PHPDocSearch\Indexer\ManualXMLWrapper,
-    \PHPDocSearch\Indexer\BookRegistry,
-    \PHPDocSearch\Indexer\ClassRegistry,
-    \PHPDocSearch\Indexer\BookBuilder,
-    \PHPDocSearch\Indexer\ClassBuilder,
-    \PHPDocSearch\Indexer\ConfigOptionBuilder,
-    \PHPDocSearch\Indexer\ConstantBuilder,
-    \PHPDocSearch\Indexer\FunctionBuilder,
-    \PHPDocSearch\Symbols\BookFactory,
-    \PHPDocSearch\Symbols\ClassFactory,
-    \PHPDocSearch\Symbols\ClassMemberFactory,
-    \PHPDocSearch\Symbols\ConfigOptionFactory,
-    \PHPDocSearch\Symbols\ConstantFactory,
-    \PHPDocSearch\Symbols\FunctionFactory;
+namespace PHPDocSearch;
 
-function fatal_error($msg)
-{
-    fwrite(STDERR, "\nFATAL ERROR: " . $msg . "\n\n");
-    exit(1);
-}
+use \PHPDocSearch\Indexer\DataMapper,
+    \PHPDocSearch\Indexer\ManualXMLBuilderFactory,
+    \PHPDocSearch\Indexer\IndexerFactory;
 
-function do_exec($cmd)
-{
-    exec($cmd, $output, $exitCode);
-    if ($exitCode) {
-        echo "Failed\n";
-        fatal_error("Command '$cmd' failed with error code $exitCode");
-    }
-}
 
 require __DIR__ . '/autoload.php';
 
-$env = new CLIEnvironment(realpath(__DIR__ . '/../../'), $argv);
 
-// Resolve paths
-echo "Resolving paths... ";
-$tempDir = $env->getBaseDir() . '/temp';
-if (!is_dir($tempDir)) {
-    if (file_exists($tempDir)) {
-        echo "Failed\n";
-        fatal_error('Configured temp path exists and is not a directory');
-    } else if (!mkdir($tempDir, 0644, true)) {
-        echo "Failed\n";
-        fatal_error('Unable to create temp directory');
+
+$baseDir = realpath(__DIR__ . '/../../');
+$config = new Config($baseDir);
+$env = new CLIEnvironment($baseDir, $config, $argv);
+
+if ($env->hasArg('help')) {
+    exit("
+
+ PHP manual indexing tool
+
+ Syntax:
+   php index.php [option [option ...]]
+
+ Options:
+   --force      - Index even if no changes since last sync
+   --help       - Display this help and exit
+   --keep       - Do not delete the manual XML source after indexing
+   --log <path> - Write log message to <path>
+   --nosync     - Don't sync with remote repositories (implies --force)
+   --quiet      - No logging
+
+");
+}
+
+try {
+    if ($env->hasArg('log')) {
+        $logger = new FileLogger($env->getArg('log'));
+    } else if ($env->hasArg('quiet')) {
+        $logger = new BlackHoleLogger;
+    } else {
+        $logger = new CLILogger;
     }
-}
-$tempDir = realpath($tempDir);
-$tempFile = $tempDir . '/.manual.xml';
-echo "OK\n\n";
-
-$docRepos = ['base', 'en'];
-$repoSyncCommand = 'git pull -q origin master';
-$repoCleanupCommands = ['git checkout -q .', 'git clean -fq'];
-
-// Pull latest doc repositories
-echo "Synchronising doc repositories\n";
-$hasWork = false;
-$syncCommands = array_merge($repoCleanupCommands, [$repoSyncCommand]);
-foreach ($docRepos as $repo) {
-    echo "Synchronising $repo... ";
-    chdir($env->getBaseDir() . '/' . $repo);
-
-    $oldHead = trim(file_get_contents('.git/refs/heads/master'));
-
-    foreach ($syncCommands as $cmd) {
-        do_exec($cmd);
-    }
-
-    $newHead = trim(file_get_contents('.git/refs/heads/master'));
-
-    if ($oldHead !== $newHead) {
-        $hasWork = true;
-    }
-
-    echo "OK\n";
-}
-echo "\n";
-
-if (!$hasWork && !$env->hasArg('force')) {
-    exit("No changes since last index run, nothing to do\n");
+} catch(\Exception $e) {
+    echo $e->getMessage() . "\n";
+    exit(1);
 }
 
-// Build .manual.xml
-echo "Building manual XML (this may take some time)... ";
-chdir($env->getBaseDir() . '/base');
-do_exec('php "' . $env->getBaseDir() . '/base/configure.php" "--output=' . $tempFile . '"');
-echo "OK\n\n";
+set_exception_handler(function(\Exception $e) use($logger) {
+    $logger->error($e->getMessage());
+    exit(1);
+});
 
-// Clean up doc repositories
-echo "Cleaning up doc repositories\n";
-foreach ($docRepos as $repo) {
-    echo "Cleaning up $repo... ";
-    chdir($env->getBaseDir() . '/' . $repo);
+$logger->log('Indexing process started, using ' . $baseDir . ' as base directory');
 
-    foreach ($syncCommands as $cmd) {
-        do_exec($cmd);
-    }
+$xmlBuilder = (new ManualXMLBuilderFactory)->create($env, $logger);
+$indexer = (new IndexerFactory)->create($env, $logger);
 
-    echo "OK\n";
-}
-echo "\n";
+$dataMapper = new DataMapper($env, function() use($config) {
+    $host = $config->getOption('db.host');
+    $dbname = $config->getOption('db.name');
+    $user = $config->getOption('db.user');
+    $pass = $config->getOption('db.pass');
+    $charset = 'utf8';
 
-// Set up the DOM
-echo "Loading manual XML... ";
-$xpath = new ManualXMLWrapper($tempFile);
-echo "OK\n\n";
+    $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
+    $db = new \PDO($dsn, $user, $pass);
 
-$dataMapper = new DataMapper((new PDOBuilder)->build($env), $env);
+    $db->setAttribute(\PDO::ATTR_ERRMODE,            \PDO::ERRMODE_EXCEPTION);
+    $db->setAttribute(\PDO::ATTR_EMULATE_PREPARES,   false);
+    $db->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
 
-$bookRegistry = new BookRegistry;
-$classRegistry = new ClassRegistry;
-
-$bookBuilder = new BookBuilder($bookRegistry, new BookFactory, $xpath);
-$configOptionBuilder = new ConfigOptionBuilder(new ConfigOptionFactory, $xpath);
-$constantBuilder = new ConstantBuilder(new ConstantFactory, $xpath);
-$functionBuilder = new FunctionBuilder(new FunctionFactory, $xpath);
-$classBuilder = new ClassBuilder($classRegistry, new ClassFactory, new ClassMemberFactory, $xpath);
-
-// Let's do some indexing!
-echo "Indexing manual\n";
-foreach ($xpath->query('//db:book[starts-with(@xml:id, "book.")]') as $bookEl) {
-    $book = $bookBuilder->build($bookEl);
-
-    echo "Indexing book " . $book->getSlug() . " (" . $book->getName() . ")... ";
-
-    // Config options
-    $query = ".//db:section[@xml:id='" . $book->getSlug() . ".configuration']//db:varlistentry[@xml:id]";
-    foreach ($xpath->query($query, $bookEl) as $varListEntry) {
-        $book->addGlobalSymbol($configOptionBuilder->build($varListEntry));
-    }
-
-    // Constants
-    $query = ".//db:appendix[@xml:id='" . $book->getSlug() . ".constants']//db:varlistentry[@xml:id]";
-    foreach ($xpath->query($query, $bookEl) as $varListEntry) {
-        $book->addGlobalSymbol($constantBuilder->build($varListEntry));
-    }
-
-    // Functions
-    $query = ".//db:reference[@xml:id='ref." . $book->getSlug() . "']//db:refentry[starts-with(@xml:id, 'function.')]";
-    foreach ($xpath->query($query, $bookEl) as $refEntry) {
-        $book->addGlobalSymbol($constantBuilder->build($refEntry));
-    }
-
-    // Classes
-    $query = ".//pd:classref | .//pd:exceptionref";
-    foreach ($xpath->query($query, $bookEl) as $classRef) {
-        $book->addGlobalSymbol($classBuilder->build($classRef));
-    }
-
-    echo "OK\n";
-}
+    return $db;
+}, $logger);
 
 
 
-echo "Indexing classes with no owner book... ";
-$classRefs = $xpath->query(".//pd:classref | .//pd:exceptionref");
-foreach ($classRefs as $classRef) {
-    $classBuilder->build($classRef);
-}
-echo "OK\n";
+$xmlWrapper = $xmlBuilder->build();
+$indexer->index($xmlWrapper, $dataMapper);
 
-
-
-echo "Storing error constants... ";
-foreach ($xpath->query(".//db:appendix[@xml:id='errorfunc.constants']//db:row[@xml:id]") as $row) {
-    $dataMapper->insertConstant($constantBuilder->build($row));
-}
-echo "OK\n";
-
-
-
-echo "Storing configuration options with no owner book... ";
-foreach ($xpath->query(".//db:section[@xml:id='ini.core']//db:varlistentry[@xml:id]") as $varListEntry) {
-    $dataMapper->insertConfigOption($configOptionBuilder->build($varListEntry));
-}
-echo "OK\n";
-
-
-
-// Try and free the memory DOM is using
-$xpath->close();
-unset($xpath, $bookBuilder, $configOptionBuilder, $constantBuilder, $functionBuilder, $classBuilder);
-
-
-
-echo "Storing books... ";
-foreach ($bookRegistry as $book) {
-    $dataMapper->insertBook($book);
-}
-echo "OK\n";
-
-
-
-echo "Storing classes... ";
-foreach ($classRegistry as $class) {
-    $dataMapper->insertClass($class);
-}
-echo "OK\n";
-
-
-
-echo "\n";
-
-
-
-/*
-echo "Indexing control structures... ";
-$sections = $xpath->query(".//db:section[@xml:id='language.control-structures']//db:sect1[@xml:id]/db:title/db:literal/../..");
-foreach ($sections as $sect) {
-    $slug = $sect->getAttribute('xml:id');
-    $name = $type = '';
-
-    $nameNodes = $xpath->query("./db:title/db:literal", $sect);
-    foreach ($nameNodes as $nameNode) {
-        if (preg_match('/^\S+$/', trim($nameNode->textContent), $match)) {
-            $name = $match[0];
-            $controlStructInsertStmt->execute();
-            break;
-        }
-    }
-}
-echo "OK\n";
-*/
-
-// Remove temp file
-//unlink($tempFile);
+$logger->log('Indexing process complete');

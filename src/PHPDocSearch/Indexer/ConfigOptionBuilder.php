@@ -8,23 +8,20 @@ class ConfigOptionBuilder
 {
     private $configOptionFactory;
 
-    private $xpath;
-
-    public function __construct(ConfigOptionFactory $configOptionFactory, ManualXMLWrapper $xpath)
+    public function __construct(ConfigOptionFactory $configOptionFactory)
     {
         $this->configOptionFactory = $configOptionFactory;
-        $this->xpath = $xpath;
     }
 
-    public function build(\DOMElement $baseEl)
+    public function build(\DOMElement $baseEl, ManualXMLWrapper $xmlWrapper)
     {
         $name = '';
-        if ($parameterEl = $this->xpath->getFirst("./db:term/db:parameter", $baseEl)) {
+        if ($parameterEl = $xmlWrapper->getFirst("./db:term/db:parameter", $baseEl)) {
             $name = trim($parameterEl->textContent);
         }
 
         $type = '';
-        if ($typeEl = $this->xpath->getFirst("./db:term/db:type", $baseEl)) {
+        if ($typeEl = $xmlWrapper->getFirst("./db:term/db:type", $baseEl)) {
             $type = trim($typeEl->textContent);
         }
 

@@ -8,23 +8,20 @@ class ConstantBuilder
 {
     private $constantFactory;
 
-    private $xpath;
-
-    public function __construct(ConstantFactory $constantFactory, ManualXMLWrapper $xpath)
+    public function __construct(ConstantFactory $constantFactory)
     {
         $this->constantFactory = $constantFactory;
-        $this->xpath = $xpath;
     }
 
-    public function build(\DOMElement $baseEl)
+    public function build(\DOMElement $baseEl, ManualXMLWrapper $xmlWrapper)
     {
         $name = '';
-        if ($constantEl = $this->xpath->getFirst("./db:term/db:constant", $baseEl)) {
+        if ($constantEl = $xmlWrapper->getFirst("./db:term/db:constant", $baseEl)) {
             $name = trim($constantEl->textContent);
         }
 
         $type = '';
-        if ($typeEl = $this->xpath->getFirst("./db:term/db:type", $baseEl)) {
+        if ($typeEl = $xmlWrapper->getFirst("./db:term/db:type", $baseEl)) {
             $type = trim($typeEl->textContent);
         }
 

@@ -389,10 +389,10 @@ echo "OK\n\n";
 $configFile = <<<PHP
 <?php
 
-\$config['dbhost'] = '$dbHost';
-\$config['dbuser'] = '$dbIndexDBUser';
-\$config['dbpass'] = '$dbIndexDBPass';
-\$config['dbname'] = '$dbIndexDBName';
+\$config['db.host'] = '$dbHost';
+\$config['db.user'] = '$dbIndexDBUser';
+\$config['db.pass'] = '$dbIndexDBPass';
+\$config['db.name'] = '$dbIndexDBName';
 
 PHP;
 

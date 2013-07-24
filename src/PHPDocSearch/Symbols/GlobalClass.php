@@ -21,15 +21,15 @@ class GlobalClass extends GlobalSymbol
     private function inheritMembers(GlobalClass $class)
     {
         foreach ($class->getMethods() as $method) {
-            $this->addMethod($method);
+            $this->addMember($method);
         }
 
         foreach ($class->getProperties() as $property) {
-            $this->addProperty($property);
+            $this->addMember($property);
         }
 
         foreach ($class->getConstants() as $constant) {
-            $this->addConstant($constant);
+            $this->addMember($constant);
         }
 
         foreach ($class->getInterfaces() as $interface) {
