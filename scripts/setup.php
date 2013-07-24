@@ -112,7 +112,7 @@ $dbSchema = [
         TO '%user%'@'%host%'
     ",
     "
-        CREATE DATABASE IF NOT EXISTS `%dbname%`
+        CREATE DATABASE IF NOT EXISTS `%dbname%` COLLATE utf8_general_ci
     ",
     "
         GRANT ALL
@@ -134,7 +134,7 @@ $dbSchema = [
             PRIMARY KEY        (`id`),
             UNIQUE KEY  `slug` (`slug`)
         )
-        DEFAULT CHARSET=utf8
+        COLLATE utf8_general_ci
     ",
     "
         CREATE TABLE `constants`
@@ -147,9 +147,12 @@ $dbSchema = [
             `last_seen` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             PRIMARY KEY             (`id`),
-            UNIQUE KEY  `book-slug` (`book_id`, `slug`)
+            UNIQUE KEY  `book-slug` (`book_id`, `slug`),
+            FOREIGN KEY (`book_id`)
+                REFERENCES `books` (`id`)
+                ON DELETE CASCADE
         )
-        DEFAULT CHARSET=utf8
+        COLLATE utf8_general_ci
     ",
     "
         CREATE TABLE `functions`
@@ -161,9 +164,25 @@ $dbSchema = [
             `last_seen` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             PRIMARY KEY             (`id`),
-            UNIQUE KEY  `book-slug` (`book_id`, `slug`)
+            UNIQUE KEY  `book-slug` (`book_id`, `slug`),
+            FOREIGN KEY (`book_id`)
+                REFERENCES `books` (`id`)
+                ON DELETE CASCADE
         )
-        DEFAULT CHARSET=utf8
+        COLLATE utf8_general_ci
+    ",
+    "
+        CREATE TABLE `controlstructures`
+        (
+            `id`        INT          UNSIGNED NOT NULL AUTO_INCREMENT,
+            `slug`      VARCHAR(255) NOT NULL,
+            `name`      VARCHAR(255) NOT NULL,
+            `last_seen` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+            PRIMARY KEY        (`id`),
+            UNIQUE KEY  `name` (`name`)
+        )
+        COLLATE utf8_general_ci
     ",
     "
         CREATE TABLE `inisettings`
@@ -176,9 +195,12 @@ $dbSchema = [
             `last_seen` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             PRIMARY KEY             (`id`),
-            UNIQUE KEY  `book-slug` (`book_id`, `slug`)
+            UNIQUE KEY  `book-slug` (`book_id`, `slug`),
+            FOREIGN KEY (`book_id`)
+                REFERENCES `books` (`id`)
+                ON DELETE CASCADE
         )
-        DEFAULT CHARSET=utf8
+        COLLATE utf8_general_ci
     ",
     "
         CREATE TABLE `classes`
@@ -192,9 +214,15 @@ $dbSchema = [
 
             PRIMARY KEY             (`id`),
             UNIQUE KEY  `book-slug` (`book_id`, `slug`),
-            KEY         `parent`    (`parent`)
+            KEY         `parent`    (`parent`),
+            FOREIGN KEY (`book_id`)
+                REFERENCES `books` (`id`)
+                ON DELETE CASCADE,
+            FOREIGN KEY (`parent`)
+                REFERENCES `classes` (`id`)
+                ON DELETE CASCADE
         )
-        DEFAULT CHARSET=utf8
+        COLLATE utf8_general_ci
     ",
     "
         CREATE TABLE `classconstants`
@@ -207,9 +235,16 @@ $dbSchema = [
             `last_seen`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             PRIMARY KEY              (`id`),
-            UNIQUE KEY  `class-name` (`class_id`, `name`)
+            UNIQUE KEY  `class-name` (`class_id`, `name`),
+            KEY         `owner`      (`owner_class_id`),
+            FOREIGN KEY (`class_id`)
+                REFERENCES `classes` (`id`)
+                ON DELETE CASCADE,
+            FOREIGN KEY (`owner_class_id`)
+                REFERENCES `classes` (`id`)
+                ON DELETE CASCADE
         )
-        DEFAULT CHARSET=utf8
+        COLLATE utf8_general_ci
     ",
     "
         CREATE TABLE `classprops`
@@ -223,8 +258,15 @@ $dbSchema = [
 
             PRIMARY KEY              (`id`),
             UNIQUE KEY  `class-name` (`class_id`, `name`)
+            KEY         `owner`      (`owner_class_id`),
+            FOREIGN KEY (`class_id`)
+                REFERENCES `classes` (`id`)
+                ON DELETE CASCADE,
+            FOREIGN KEY (`owner_class_id`)
+                REFERENCES `classes` (`id`)
+                ON DELETE CASCADE
         )
-        DEFAULT CHARSET=utf8
+        COLLATE utf8_general_ci
     ",
     "
         CREATE TABLE `classmethods`
@@ -238,8 +280,15 @@ $dbSchema = [
 
             PRIMARY KEY              (`id`),
             UNIQUE KEY  `class-name` (`class_id`, `name`)
+            KEY         `owner`      (`owner_class_id`),
+            FOREIGN KEY (`class_id`)
+                REFERENCES `classes` (`id`)
+                ON DELETE CASCADE,
+            FOREIGN KEY (`owner_class_id`)
+                REFERENCES `classes` (`id`)
+                ON DELETE CASCADE
         )
-        DEFAULT CHARSET=utf8
+        COLLATE utf8_general_ci
     ",
 ];
 
