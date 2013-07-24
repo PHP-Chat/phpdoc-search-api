@@ -63,7 +63,7 @@ $hasWork = false;
 $syncCommands = array_merge($repoCleanupCommands, [$repoSyncCommand]);
 foreach ($docRepos as $repo) {
     echo "Synchronising $repo... ";
-    chdir($phpDocBaseDir . '/' . $repo);
+    chdir($env->getBaseDir() . '/' . $repo);
 
     $oldHead = trim(file_get_contents('.git/refs/heads/master'));
 
@@ -87,15 +87,15 @@ if (!$hasWork && !$env->hasArg('force')) {
 
 // Build .manual.xml
 echo "Building manual XML (this may take some time)... ";
-chdir($phpDocBaseDir . '/base');
-do_exec('php "' . $phpDocBaseDir . '/base/configure.php" "--output=' . $tempFile . '"');
+chdir($env->getBaseDir() . '/base');
+do_exec('php "' . $env->getBaseDir() . '/base/configure.php" "--output=' . $tempFile . '"');
 echo "OK\n\n";
 
 // Clean up doc repositories
 echo "Cleaning up doc repositories\n";
 foreach ($docRepos as $repo) {
     echo "Cleaning up $repo... ";
-    chdir($phpDocBaseDir . '/' . $repo);
+    chdir($env->getBaseDir() . '/' . $repo);
 
     foreach ($syncCommands as $cmd) {
         do_exec($cmd);

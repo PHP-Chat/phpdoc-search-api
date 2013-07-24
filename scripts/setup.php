@@ -257,7 +257,7 @@ $dbSchema = [
             `last_seen`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             PRIMARY KEY              (`id`),
-            UNIQUE KEY  `class-name` (`class_id`, `name`)
+            UNIQUE KEY  `class-name` (`class_id`, `name`),
             KEY         `owner`      (`owner_class_id`),
             FOREIGN KEY (`class_id`)
                 REFERENCES `classes` (`id`)
@@ -279,7 +279,7 @@ $dbSchema = [
             `last_seen`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             PRIMARY KEY              (`id`),
-            UNIQUE KEY  `class-name` (`class_id`, `name`)
+            UNIQUE KEY  `class-name` (`class_id`, `name`),
             KEY         `owner`      (`owner_class_id`),
             FOREIGN KEY (`class_id`)
                 REFERENCES `classes` (`id`)
@@ -328,12 +328,14 @@ if ($installBase === false) {
     echo "Failed\n";
     fatal_error("Cannot resovle real path of installation base directory");
 }
+
 foreach (array_keys($repos) as $dir) {
     if (is_dir("$installBase/$dir")) {
         echo "Failed\n";
         fatal_error("Directory '$dir' already exists within the installation base directory");
     }
 }
+
 echo "OK\n";
 
 if ($dbSetup) {
@@ -364,16 +366,6 @@ if (!$dbSetup) {
     exit(0);
 }
 
-echo "Connecting to database... ";
-try {
-    $db = new PDO("mysql:host=$dbHost", $dbAdminUser, $dbAdminPass);
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    echo "Failed\n";
-    fatal_error('Unable to connect to database: ' . $e->getMessage());
-}
-echo "OK\n\n";
-
 echo "Creating DB schema... ";
 try {
     $substitutionVars = [
@@ -397,12 +389,10 @@ echo "OK\n\n";
 $configFile = <<<PHP
 <?php
 
-    \$config['dbhost'] = '$dbHost';
-    \$config['dbuser'] = '$dbIndexDBUser';
-    \$config['dbpass'] = '$dbIndexDBPass';
-    \$config['dbname'] = '$dbIndexDBName';
-
-    \$config['staleage'] = 7; // days
+\$config['dbhost'] = '$dbHost';
+\$config['dbuser'] = '$dbIndexDBUser';
+\$config['dbpass'] = '$dbIndexDBPass';
+\$config['dbname'] = '$dbIndexDBName';
 
 PHP;
 
