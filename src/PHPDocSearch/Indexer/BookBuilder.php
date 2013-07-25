@@ -15,14 +15,15 @@ class BookBuilder
 
     public function build(\DOMElement $baseEl, ManualXMLWrapper $xmlWrapper, BookRegistry $bookRegistry)
     {
-        $fullName = '';
-        if ($title = $xmlWrapper->getFirst('./db:title', $baseEl)) {
-            $fullName = trim($title->textContent);
+        if (!$titleEl = $xmlWrapper->getFirst('./db:title', $baseEl)) {
+            return null;
         }
+        $fullName = trim($titleEl->textContent);
 
-        $shortName = $fullName;
         if ($titleAbbrev = $xmlWrapper->getFirst('./db:titleabbrev', $baseEl)) {
             $shortName = trim($titleAbbrev->textContent);
+        } else {
+            $shortName = $fullName;
         }
 
         $slug = explode('.', $baseEl->getAttribute('xml:id'), 2)[1];

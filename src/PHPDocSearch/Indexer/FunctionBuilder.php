@@ -15,7 +15,11 @@ class FunctionBuilder
 
     public function build(\DOMElement $baseEl, ManualXMLWrapper $xmlWrapper)
     {
-        $name = $xmlWrapper->getFirst("./db:refnamediv/db:refname", $baseEl)->textContent;
+        if (!$refNameEl = $xmlWrapper->getFirst("./db:refnamediv/db:refname", $baseEl)) {
+            return null;
+        }
+        $name = trim($refNameEl->textContent);
+
         $slug = $baseEl->getAttribute('xml:id');
 
         $function = $this->functionFactory->create();

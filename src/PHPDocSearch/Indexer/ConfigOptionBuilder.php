@@ -15,15 +15,15 @@ class ConfigOptionBuilder
 
     public function build(\DOMElement $baseEl, ManualXMLWrapper $xmlWrapper)
     {
-        $name = '';
-        if ($parameterEl = $xmlWrapper->getFirst("./db:term/db:parameter", $baseEl)) {
-            $name = trim($parameterEl->textContent);
+        if (!$parameterEl = $xmlWrapper->getFirst("./db:term/db:parameter", $baseEl)) {
+            return null;
         }
+        $name = trim($parameterEl->textContent);
 
-        $type = '';
-        if ($typeEl = $xmlWrapper->getFirst("./db:term/db:type", $baseEl)) {
-            $type = trim($typeEl->textContent);
+        if (!$typeEl = $xmlWrapper->getFirst("./db:term/db:type", $baseEl)) {
+            return null;
         }
+        $type = trim($typeEl->textContent);
 
         $slug = $baseEl->getAttribute('xml:id');
 

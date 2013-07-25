@@ -79,16 +79,17 @@ class ClassBuilder
 
     private function processPropertiesAndConstants($baseEl, $class, $xmlWrapper)
     {
-        foreach ($xmlWrapper->query(".//db:classsynopsis/db:fieldsynopsis", $baseEl) as $fieldRef) {
+        foreach ($xmlWrapper->query(".//db:classsynopsis/db:fieldsynopsis", $baseEl) as $fieldSynopsisEl) {
+            // TODO: find an safe, XPath 1.0 compliant way to do this without the loop
             $isConst = false;
-            foreach ($xmlWrapper->query(".//db:modifier", $fieldRef) as $modifier) {
+            foreach ($xmlWrapper->query(".//db:modifier", $fieldSynopsisEl) as $modifier) {
                 if (trim(strtolower($modifier->textContent)) === 'const') {
                     $isConst = true;
                     break;
                 }
             }
 
-            if ($varName = $xmlWrapper->getFirst(".//db:varname[@linkend]", $fieldRef)) {
+            if ($varName = $xmlWrapper->getFirst(".//db:varname[@linkend]", $fieldSynopsisEl)) {
                 $name = $this->getMemberName($varName->textContent);
                 $slug = $varName->getAttribute('linkend');
 
@@ -109,6 +110,9 @@ class ClassBuilder
         $class = $this->classFactory->create();
 
         $this->processClassSynopsis($baseEl, $class, $xmlWrapper, $classRegistry);
+        if ($class->getName() === null) {
+            return null;
+        }
 
         if (!$classRegistry->isRegistered($class->getName())) {
             $this->processMethods($baseEl, $class, $xmlWrapper);

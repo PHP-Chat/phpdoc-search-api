@@ -15,15 +15,15 @@ class ConstantBuilder
 
     public function build(\DOMElement $baseEl, ManualXMLWrapper $xmlWrapper)
     {
-        $name = '';
-        if ($constantEl = $xmlWrapper->getFirst("./db:term/db:constant", $baseEl)) {
-            $name = trim($constantEl->textContent);
+        if (!$constantEl = $xmlWrapper->getFirst("./db:term/db:constant", $baseEl)) {
+            return null;
         }
+        $name = trim($constantEl->textContent);
 
-        $type = '';
-        if ($typeEl = $xmlWrapper->getFirst("./db:term/db:type", $baseEl)) {
-            $type = trim($typeEl->textContent);
+        if (!$typeEl = $xmlWrapper->getFirst("./db:term/db:type", $baseEl)) {
+            return null;
         }
+        $type = trim($typeEl->textContent);
 
         $slug = $baseEl->getAttribute('xml:id');
 

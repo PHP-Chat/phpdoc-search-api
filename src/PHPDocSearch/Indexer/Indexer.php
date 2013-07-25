@@ -17,6 +17,8 @@ class Indexer
 
     private $configOptionBuilder;
 
+    private $controlStructureBuilder;
+
     private $constantBuilder;
 
     private $functionBuilder;
@@ -29,6 +31,7 @@ class Indexer
         ClassRegistryFactory $classRegistryFactory,
         BookBuilder $bookBuilder,
         ConfigOptionBuilder $configOptionBuilder,
+        ControlStructureBuilder $controlStructureBuilder,
         ConstantBuilder $constantBuilder,
         FunctionBuilder $functionBuilder,
         ClassBuilder $classBuilder,
@@ -39,6 +42,7 @@ class Indexer
         $this->classRegistryFactory = $classRegistryFactory;
         $this->bookBuilder = $bookBuilder;
         $this->configOptionBuilder = $configOptionBuilder;
+        $this->controlStructureBuilder = $controlStructureBuilder;
         $this->constantBuilder = $constantBuilder;
         $this->functionBuilder = $functionBuilder;
         $this->classBuilder = $classBuilder;
@@ -50,39 +54,49 @@ class Indexer
         $this->logger->log('Indexing books...');
 
         foreach ($xmlWrapper->query('//db:book[starts-with(@xml:id, "book.")]') as $bookEl) {
-            $book = $this->bookBuilder->build($bookEl, $xmlWrapper, $bookRegistry);
+            if (!$book = $this->bookBuilder->build($bookEl, $xmlWrapper, $bookRegistry)) {
+                continue;
+            }
 
             $this->logger->log('Indexing book ' . $book->getName() . '...');
 
             $query = ".//db:section[@xml:id='" . $book->getSlug() . ".configuration']//db:varlistentry[@xml:id]";
             $count = 0;
             foreach ($xmlWrapper->query($query, $bookEl) as $varListEntry) {
-                $book->addGlobalSymbol($this->configOptionBuilder->build($varListEntry, $xmlWrapper));
-                $count++;
+                if ($configOption = $this->configOptionBuilder->build($varListEntry, $xmlWrapper)) {
+                    $book->addGlobalSymbol($configOption);
+                    $count++;
+                }
             }
             $this->logger->log("  $count config options");
 
             $query = ".//db:appendix[@xml:id='" . $book->getSlug() . ".constants']//db:varlistentry[@xml:id]";
             $count = 0;
             foreach ($xmlWrapper->query($query, $bookEl) as $varListEntry) {
-                $book->addGlobalSymbol($this->constantBuilder->build($varListEntry, $xmlWrapper));
-                $count++;
+                if ($constant = $this->constantBuilder->build($varListEntry, $xmlWrapper)) {
+                    $book->addGlobalSymbol($constant);
+                    $count++;
+                }
             }
             $this->logger->log("  $count constants");
 
             $query = ".//db:reference[@xml:id='ref." . $book->getSlug() . "']//db:refentry[starts-with(@xml:id, 'function.')]";
             $count = 0;
             foreach ($xmlWrapper->query($query, $bookEl) as $refEntry) {
-                $book->addGlobalSymbol($this->functionBuilder->build($refEntry, $xmlWrapper));
-                $count++;
+                if ($function = $this->functionBuilder->build($refEntry, $xmlWrapper)) {
+                    $book->addGlobalSymbol($function);
+                    $count++;
+                }
             }
             $this->logger->log("  $count functions");
 
             $query = ".//pd:classref | .//pd:exceptionref";
             $count = 0;
             foreach ($xmlWrapper->query($query, $bookEl) as $classRef) {
-                $book->addGlobalSymbol($this->classBuilder->build($classRef, $xmlWrapper, $classRegistry));
-                $count++;
+                if ($class = $this->classBuilder->build($classRef, $xmlWrapper, $classRegistry)) {
+                    $book->addGlobalSymbol($class);
+                    $count++;
+                }
             }
             $this->logger->log("  $count classes");
         }
@@ -103,7 +117,7 @@ class Indexer
         $this->logger->log("  $count entries found");
     }
 
-    private function storeErrorConstants($xmlWrapper, $dataMapper)
+    private function indexAndStoreErrorConstants($xmlWrapper, $dataMapper)
     {
         $this->logger->log('Indexing/storing error constants...');
 
@@ -111,13 +125,15 @@ class Indexer
         $count = 0;
 
         foreach ($xmlWrapper->query($query) as $row) {
-            $dataMapper->insertConstant($this->constantBuilder->build($row, $xmlWrapper));
-            $count++;
+            if ($constant = $this->constantBuilder->build($row, $xmlWrapper)) {
+                $dataMapper->insertConstant($constant);
+                $count++;
+            }
         }
         $this->logger->log("  $count entries found");
     }
 
-    private function storeCoreConfigOptions($xmlWrapper, $dataMapper)
+    private function indexAndStoreCoreConfigOptions($xmlWrapper, $dataMapper)
     {
         $this->logger->log('Indexing/storing core config options...');
 
@@ -125,8 +141,27 @@ class Indexer
         $count = 0;
 
         foreach ($xmlWrapper->query($query) as $varListEntry) {
-            $dataMapper->insertConfigOption($this->configOptionBuilder->build($varListEntry, $xmlWrapper));
-            $count++;
+            if ($configOption = $this->configOptionBuilder->build($varListEntry, $xmlWrapper)) {
+                $dataMapper->insertConfigOption($configOption);
+                $count++;
+            }
+        }
+
+        $this->logger->log("  $count entries found");
+    }
+
+    private function indexAndStoreControlStructures($xmlWrapper, $dataMapper)
+    {
+        $this->logger->log('Indexing/storing control structures...');
+
+        $query = ".//db:chapter[@xml:id='language.control-structures']/db:sect1[@xml:id]";
+        $count = 0;
+
+        foreach ($xmlWrapper->query($query) as $sect) {
+            if ($controlStructure = $this->controlStructureBuilder->build($sect, $xmlWrapper)) {
+                $dataMapper->insertControlStructure($controlStructure);
+                $count++;
+            }
         }
 
         $this->logger->log("  $count entries found");
@@ -158,8 +193,9 @@ class Indexer
         $this->indexBooks($xmlWrapper, $bookRegistry, $classRegistry);
         $this->indexCoreClasses($xmlWrapper, $classRegistry);
 
-        $this->storeErrorConstants($xmlWrapper, $dataMapper);
-        $this->storeCoreConfigOptions($xmlWrapper, $dataMapper);
+        $this->indexAndStoreErrorConstants($xmlWrapper, $dataMapper);
+        $this->indexAndStoreCoreConfigOptions($xmlWrapper, $dataMapper);
+        $this->indexAndStoreControlStructures($xmlWrapper, $dataMapper);
 
         $xmlWrapper->close();
 

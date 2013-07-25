@@ -79,34 +79,6 @@ class DataMapper
         }
     }
 
-    public function insertControlStructure(ControlStructure $controlStructure)
-    {
-        $this->logger->log('Inserting control structure ' . $controlStructure->getName());
-
-        if (!isset($this->statements['insertControlStructure'])) {
-            $this->statements['insertControlStructure'] = $this->db->prepare("
-                INSERT INTO `controlstructures`
-                    (`slug`, `name`)
-                VALUES
-                    (:islug, :name)
-                ON DUPLICATE KEY UPDATE
-                    `slug` = :uslug,
-                    `last_seen` = :last_seen
-            ");
-
-            $this->statements['insertControlStructure']->bindValue('last_seen', $this->startTime);
-        }
-
-        $stmt = $this->statements['insertControlStructure'];
-
-        $stmt->bindValue(':book_id', $controlStructure->getBook()->getId(), \PDO::PARAM_INT);
-        $stmt->bindValue(':slug',    $controlStructure->getSlug(),          \PDO::PARAM_STR);
-        $stmt->bindValue(':iname',   $controlStructure->getName(),          \PDO::PARAM_STR);
-        $stmt->bindValue(':uname',   $controlStructure->getName(),          \PDO::PARAM_STR);
-
-        $stmt->execute();
-    }
-
     public function insertClass(GlobalClass $class)
     {
         if ($class->getId() === null) {
@@ -191,6 +163,33 @@ class DataMapper
         $stmt->bindValue(':itype',   $configOption->getType(), \PDO::PARAM_STR);
         $stmt->bindValue(':uname',   $configOption->getName(), \PDO::PARAM_STR);
         $stmt->bindValue(':utype',   $configOption->getType(), \PDO::PARAM_STR);
+
+        $stmt->execute();
+    }
+
+    public function insertControlStructure(ControlStructure $controlStructure)
+    {
+        $this->logger->log('Inserting control structure ' . $controlStructure->getName());
+
+        if (!isset($this->statements['insertControlStructure'])) {
+            $this->statements['insertControlStructure'] = $this->db->prepare("
+                INSERT INTO `controlstructures`
+                    (`slug`, `name`)
+                VALUES
+                    (:islug, :name)
+                ON DUPLICATE KEY UPDATE
+                    `slug` = :uslug,
+                    `last_seen` = :last_seen
+            ");
+
+            $this->statements['insertControlStructure']->bindValue('last_seen', $this->startTime);
+        }
+
+        $stmt = $this->statements['insertControlStructure'];
+
+        $stmt->bindValue(':islug', $controlStructure->getSlug(), \PDO::PARAM_STR);
+        $stmt->bindValue(':name',  $controlStructure->getName(), \PDO::PARAM_STR);
+        $stmt->bindValue(':uslug', $controlStructure->getSlug(), \PDO::PARAM_STR);
 
         $stmt->execute();
     }
@@ -339,7 +338,7 @@ class DataMapper
 
         if (!isset($this->statements['insertClassConstant'])) {
             $this->statements['insertClassConstant'] = $this->db->prepare("
-                INSERT INTO `classprops`
+                INSERT INTO `classconstants`
                     (`class_id`, `owner_class_id`, `slug`, `name`)
                 VALUES
                     (:class_id, :iowner_class_id, :islug, :name)
