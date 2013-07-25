@@ -11,12 +11,13 @@ require __DIR__ . '/autoload.php';
 
 
 
-$baseDir = realpath(__DIR__ . '/../../');
-$config = new Config($baseDir);
-$env = new CLIEnvironment($baseDir, $config, $argv);
+try {
+    $baseDir = realpath(__DIR__ . '/../../');
+    $config = new Config($baseDir);
+    $env = new CLIEnvironment($baseDir, $config, $argv);
 
-if ($env->hasArg('help')) {
-    exit("
+    if ($env->hasArg('help')) {
+        exit("
 
  PHP manual indexing tool
 
@@ -35,7 +36,6 @@ if ($env->hasArg('help')) {
 ");
 }
 
-try {
     if ($env->hasArg('log')) {
         $logger = new FileLogger($env->getArg('log'));
     } else if ($env->hasArg('quiet')) {

@@ -4,9 +4,7 @@ namespace PHPDocSearch;
 
 class CLIEnvironment extends Environment
 {
-    private $argv;
-
-    private $args;
+    private $args = [];
 
     private $startTime;
 
@@ -17,21 +15,29 @@ class CLIEnvironment extends Environment
         $this->argv = $argv;
 
         $this->startTime = new \DateTime('now');
-        $this->parseArgv();
+        $this->parseArgv($argv);
     }
 
-    private function parseArgv()
+    private function parseArgv($argv)
     {
-        $this->args = [];
         $current = null;
 
-        for ($i = 1, $l = count($this->argv); $i < $l; $i++) {
-            if (substr($this->argv[$i], 0, 2) === '--') {
-                $name = strtolower(substr($this->argv[$i], 2));
-                $this->args[$name] = true;
+        for ($i = 1, $l = count($argv); $i < $l; $i++) {
+            if (substr($argv[$i], 0, 2) === '--') {
+                $name = strtolower(substr($argv[$i], 2));
+
+                if (strpos($name, '=') !== false) {
+                    list($name, $value) = explode('=', $name, 2);
+                    $this->args[$name] = $value;
+                } else {
+                    $this->args[$name] = true;
+                }
+
                 $current = &$this->args[$name];
             } else if ($current === true) {
-                $current = $this->argv[$i];
+                $current = $argv[$i];
+            } else {
+                throw new \RuntimeException('Invalid option: ' . $argv[$i]);
             }
         }
     }
