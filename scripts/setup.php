@@ -147,10 +147,12 @@ $dbSchema = [
             `last_seen` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             PRIMARY KEY             (`id`),
-            UNIQUE KEY  `book-slug` (`book_id`, `slug`),
+            UNIQUE KEY  `slug`      (`slug`),
+            KEY         `book`      (`book_id`),
             FOREIGN KEY (`book_id`)
                 REFERENCES `books` (`id`)
                 ON DELETE CASCADE
+                ON UPDATE CASCADE
         )
         COLLATE utf8_general_ci
     ",
@@ -164,10 +166,12 @@ $dbSchema = [
             `last_seen` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             PRIMARY KEY             (`id`),
-            UNIQUE KEY  `book-slug` (`book_id`, `slug`),
+            UNIQUE KEY  `slug`      (`slug`),
+            KEY         `book`      (`book_id`),
             FOREIGN KEY (`book_id`)
                 REFERENCES `books` (`id`)
                 ON DELETE CASCADE
+                ON UPDATE CASCADE
         )
         COLLATE utf8_general_ci
     ",
@@ -195,10 +199,12 @@ $dbSchema = [
             `last_seen` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             PRIMARY KEY             (`id`),
-            UNIQUE KEY  `book-slug` (`book_id`, `slug`),
+            UNIQUE KEY  `slug`      (`slug`),
+            KEY         `book`      (`book_id`),
             FOREIGN KEY (`book_id`)
                 REFERENCES `books` (`id`)
                 ON DELETE CASCADE
+                ON UPDATE CASCADE
         )
         COLLATE utf8_general_ci
     ",
@@ -213,14 +219,17 @@ $dbSchema = [
             `last_seen` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             PRIMARY KEY             (`id`),
-            UNIQUE KEY  `book-slug` (`book_id`, `slug`),
+            UNIQUE KEY  `slug`      (`slug`),
+            KEY         `book`      (`book_id`),
             KEY         `parent`    (`parent`),
             FOREIGN KEY (`book_id`)
                 REFERENCES `books` (`id`)
-                ON DELETE CASCADE,
+                ON DELETE CASCADE
+                ON UPDATE CASCADE,
             FOREIGN KEY (`parent`)
                 REFERENCES `classes` (`id`)
                 ON DELETE CASCADE
+                ON UPDATE CASCADE
         )
         COLLATE utf8_general_ci
     ",
@@ -239,10 +248,12 @@ $dbSchema = [
             KEY         `owner`      (`owner_class_id`),
             FOREIGN KEY (`class_id`)
                 REFERENCES `classes` (`id`)
-                ON DELETE CASCADE,
+                ON DELETE CASCADE
+                ON UPDATE CASCADE,
             FOREIGN KEY (`owner_class_id`)
                 REFERENCES `classes` (`id`)
                 ON DELETE CASCADE
+                ON UPDATE CASCADE
         )
         COLLATE utf8_general_ci
     ",
@@ -261,10 +272,12 @@ $dbSchema = [
             KEY         `owner`      (`owner_class_id`),
             FOREIGN KEY (`class_id`)
                 REFERENCES `classes` (`id`)
-                ON DELETE CASCADE,
+                ON DELETE CASCADE
+                ON UPDATE CASCADE,
             FOREIGN KEY (`owner_class_id`)
                 REFERENCES `classes` (`id`)
                 ON DELETE CASCADE
+                ON UPDATE CASCADE
         )
         COLLATE utf8_general_ci
     ",
@@ -283,10 +296,12 @@ $dbSchema = [
             KEY         `owner`      (`owner_class_id`),
             FOREIGN KEY (`class_id`)
                 REFERENCES `classes` (`id`)
-                ON DELETE CASCADE,
+                ON DELETE CASCADE
+                ON UPDATE CASCADE,
             FOREIGN KEY (`owner_class_id`)
                 REFERENCES `classes` (`id`)
                 ON DELETE CASCADE
+                ON UPDATE CASCADE
         )
         COLLATE utf8_general_ci
     ",

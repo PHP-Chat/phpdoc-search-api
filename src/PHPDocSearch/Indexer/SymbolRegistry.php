@@ -6,7 +6,7 @@ use \PHPDocSearch\Symbols\Symbol;
 
 abstract class SymbolRegistry implements \Iterator, \Countable
 {
-    private $symbols = [];
+    protected $symbols = [];
 
     private $length;
 
@@ -58,5 +58,12 @@ abstract class SymbolRegistry implements \Iterator, \Countable
     public function isRegistered($name)
     {
         return isset($this->symbols[$this->normalizeName($name)]);
+    }
+
+    public function getSymbolByName($name)
+    {
+        $name = $this->normalizeName($name);
+
+        return isset($this->symbols[$name]) ? $this->symbols[$name] : null;
     }
 }

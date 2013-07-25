@@ -39,8 +39,8 @@ class ClassRegistry extends SymbolRegistry
     {
         $name = $this->normalizeName($parentName);
 
-        if (isset($this->classes[$name])) {
-            $class->setParent($this->classes[$name]);
+        if ($this->isRegistered($name)) {
+            $class->setParent($this->getSymbolByName($name));
         } else {
             if (!isset($this->pendingParents[$name])) {
                 $this->pendingParents[$name] = [];
@@ -54,8 +54,8 @@ class ClassRegistry extends SymbolRegistry
     {
         $name = $this->normalizeName($interfaceName);
 
-        if (isset($this->classes[$name])) {
-            $class->addInterface($this->classes[$name]);
+        if ($this->isRegistered($name)) {
+            $class->addInterface($this->getSymbolByName($name));
         } else {
             if (!isset($this->pendingInterfaces[$name])) {
                 $this->pendingInterfaces[$name] = [];

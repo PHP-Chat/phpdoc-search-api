@@ -89,10 +89,10 @@ class ManualXMLBuilder
     {
         $srcFile = $this->env->getBaseDir() . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . '.manual.xml';
 
+        $repos = $this->createRepos();
+
         if (!$this->env->hasArg('nosync')) {
             $this->logger->log('Syncing local repositories with remote sources...');
-
-            $repos = $this->createRepos();
 
             $changed = $this->syncRepos($repos);
             if (!$changed) {
