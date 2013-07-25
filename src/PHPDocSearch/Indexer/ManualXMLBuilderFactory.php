@@ -8,7 +8,7 @@ use PHPDocSearch\Logger,
 
 class ManualXMLBuilderFactory
 {
-    public function create(Environment $env, Logger $logger = null)
+    public function create(Environment $env, Logger $logger)
     {
         return new ManualXMLBuilder($env, new GitRepositoryFactory, new ManualXMLWrapperFactory, $logger);
     }

@@ -336,6 +336,16 @@ foreach (array_keys($repos) as $dir) {
     }
 }
 
+$tempDir = $installBase . '/temp';
+if (!is_dir($tempDir)) {
+    if (file_exists($tempDir)) {
+        echo "Failed\n";
+        fatal_error('Temp directory path exists and is not a directory');
+    } else if (!mkdir($tempDir, 0644, true)) {
+        echo "Failed\n";
+        fatal_error('Unable to create temp directory');
+    }
+}
 echo "OK\n";
 
 if ($dbSetup) {
@@ -399,6 +409,10 @@ PHP;
 echo "Writing config file... ";
 file_put_contents($installBase . '/config.php', $configFile);
 echo "OK\n\n";
+
+if (confirm("Do you want to remove the setup script?", true)) {
+    unlink(__FILE__);
+}
 
 if (confirm("Do you want to run the indexing script now?", true)) {
     $cmd = 'php "' . realpath($installBase . '/api/scripts/index.php') . '" --nosync';

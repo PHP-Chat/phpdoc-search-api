@@ -20,7 +20,7 @@ class ManualXMLBuilder
         CLIEnvironment $env,
         GitRepositoryFactory $repoFactory,
         ManualXMLWrapperFactory $xmlWrapperFactory,
-        Logger $logger = null
+        Logger $logger
     ) {
         $this->env = $env;
         $this->repoFactory = $repoFactory;
@@ -40,8 +40,6 @@ class ManualXMLBuilder
 
     private function syncRepos($repos)
     {
-        $this->logger->log('  Syncing local repositories with remote sources');
-
         $changed = false;
 
         foreach ($repos as $repo) {
@@ -55,7 +53,7 @@ class ManualXMLBuilder
                 $hasWork = true;
             }
 
-            $this->logger->log('    Repository ' . $repo->getName() . ' synced');
+            $this->logger->log('  Repository ' . $repo->getName() . ' synced');
         }
 
         return $changed;
@@ -63,13 +61,11 @@ class ManualXMLBuilder
 
     private function cleanRepos($repos)
     {
-        $this->logger->log('Cleaning local repositories');
-
         foreach ($repos as $repo) {
             $repo->checkout();
             $repo->clean();
 
-            $this->logger->log('  Repository ' . $repo->getName() . ' cleaned');
+            $this->logger->log('  Repository ' . $repo->getName() . ' clean');
         }
     }
 
@@ -94,7 +90,7 @@ class ManualXMLBuilder
         $srcFile = $this->env->getBaseDir() . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . '.manual.xml';
 
         if (!$this->env->hasArg('nosync')) {
-            $this->logger->log('Building manual XML...');
+            $this->logger->log('Syncing local repositories with remote sources...');
 
             $repos = $this->createRepos();
 
@@ -106,7 +102,10 @@ class ManualXMLBuilder
                     throw new \RuntimeException('Nothing to do');
                 }
             }
+        }
 
+        if (!$this->env->hasArg('nobuild')) {
+            $this->logger->log('Building manual XML...');
             $buildSuccess = $this->buildXML($srcFile);
 
             $this->cleanRepos($repos);
@@ -118,6 +117,7 @@ class ManualXMLBuilder
             throw new \RuntimeException('Manual source file missing');
         }
 
+        $this->logger->log('Loading manual XML...');
         return $this->xmlWrapperFactory->create($srcFile, $this->env->hasArg('keep'));
     }
 }

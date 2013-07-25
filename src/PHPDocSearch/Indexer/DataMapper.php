@@ -26,7 +26,7 @@ class DataMapper
 
     private $statements = [];
 
-    public function __construct(Environment $env, callable $dataProvider, Logger $logger = null)
+    public function __construct(Environment $env, callable $dataProvider, Logger $logger)
     {
         $this->env = $env;
         $this->db = $dataProvider();

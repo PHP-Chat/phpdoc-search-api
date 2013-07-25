@@ -13,7 +13,7 @@ use \PHPDocSearch\Environment,
 
 class IndexerFactory
 {
-    public function create(Environment $env, Logger $logger = null)
+    public function create(Environment $env, Logger $logger)
     {
         return new Indexer(
             $env,

@@ -27,7 +27,8 @@ if ($env->hasArg('help')) {
    --force      - Index even if no changes since last sync
    --help       - Display this help and exit
    --keep       - Do not delete the manual XML source after indexing
-   --log <path> - Write log message to <path>
+   --log <path> - Write log message to <path> (takes precedence over --quiet)
+   --nobuild    - Don't rebuild the XML source (requires --keep on previous run)
    --nosync     - Don't sync with remote repositories (implies --force)
    --quiet      - No logging
 

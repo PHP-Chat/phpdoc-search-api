@@ -32,7 +32,7 @@ class Indexer
         ConstantBuilder $constantBuilder,
         FunctionBuilder $functionBuilder,
         ClassBuilder $classBuilder,
-        Logger $logger = null
+        Logger $logger
     ) {
         $this->env = $env;
         $this->bookRegistryFactory = $bookRegistryFactory;
