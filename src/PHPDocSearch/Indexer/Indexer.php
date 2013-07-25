@@ -19,6 +19,8 @@ class Indexer
 
     private $controlStructureBuilder;
 
+    private $magicMethodBuilder;
+
     private $constantBuilder;
 
     private $functionBuilder;
@@ -32,6 +34,7 @@ class Indexer
         BookBuilder $bookBuilder,
         ConfigOptionBuilder $configOptionBuilder,
         ControlStructureBuilder $controlStructureBuilder,
+        MagicMethodBuilder $magicMethodBuilder,
         ConstantBuilder $constantBuilder,
         FunctionBuilder $functionBuilder,
         ClassBuilder $classBuilder,
@@ -43,6 +46,7 @@ class Indexer
         $this->bookBuilder = $bookBuilder;
         $this->configOptionBuilder = $configOptionBuilder;
         $this->controlStructureBuilder = $controlStructureBuilder;
+        $this->magicMethodBuilder = $magicMethodBuilder;
         $this->constantBuilder = $constantBuilder;
         $this->functionBuilder = $functionBuilder;
         $this->classBuilder = $classBuilder;
@@ -167,6 +171,23 @@ class Indexer
         $this->logger->log("  $count entries found");
     }
 
+    private function indexAndStoreMagicMethods($xmlWrapper, $dataMapper)
+    {
+        $this->logger->log('Indexing/storing magic methods...');
+
+        $query = ".//db:chapter[@xml:id='language.oop5']//db:methodsynopsis[starts-with(@xml:id, 'object.')]";
+        $count = 0;
+
+        foreach ($xmlWrapper->query($query) as $methodSynopsis) {
+            if ($magicMethod = $this->magicMethodBuilder->build($methodSynopsis, $xmlWrapper)) {
+                $dataMapper->insertMagicMethod($magicMethod);
+                $count++;
+            }
+        }
+
+        $this->logger->log("  $count entries found");
+    }
+
     private function storeBooks($bookRegistry, $dataMapper)
     {
         $this->logger->log('Storing books...');
@@ -196,6 +217,7 @@ class Indexer
         $this->indexAndStoreErrorConstants($xmlWrapper, $dataMapper);
         $this->indexAndStoreCoreConfigOptions($xmlWrapper, $dataMapper);
         $this->indexAndStoreControlStructures($xmlWrapper, $dataMapper);
+        $this->indexAndStoreMagicMethods($xmlWrapper, $dataMapper);
 
         $xmlWrapper->close();
 

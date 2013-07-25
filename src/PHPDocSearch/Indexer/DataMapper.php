@@ -10,6 +10,7 @@ use \PHPDocSearch\Environment,
     \PHPDocSearch\Symbols\ClassProperty,
     \PHPDocSearch\Symbols\ConfigOption,
     \PHPDocSearch\Symbols\ControlStructure,
+    \PHPDocSearch\Symbols\MagicMethod,
     \PHPDocSearch\Symbols\GlobalClass,
     \PHPDocSearch\Symbols\GlobalConstant,
     \PHPDocSearch\Symbols\GlobalFunction;
@@ -190,6 +191,33 @@ class DataMapper
         $stmt->bindValue(':islug', $controlStructure->getSlug(), \PDO::PARAM_STR);
         $stmt->bindValue(':name',  $controlStructure->getName(), \PDO::PARAM_STR);
         $stmt->bindValue(':uslug', $controlStructure->getSlug(), \PDO::PARAM_STR);
+
+        $stmt->execute();
+    }
+
+    public function insertMagicMethod(MagicMethod $magicMethod)
+    {
+        $this->logger->log('Inserting magic method ' . $magicMethod->getName());
+
+        if (!isset($this->statements['insertMagicMethod'])) {
+            $this->statements['insertMagicMethod'] = $this->db->prepare("
+                INSERT INTO `magicmethods`
+                    (`slug`, `name`)
+                VALUES
+                    (:islug, :name)
+                ON DUPLICATE KEY UPDATE
+                    `slug` = :uslug,
+                    `last_seen` = :last_seen
+            ");
+
+            $this->statements['insertMagicMethod']->bindValue('last_seen', $this->startTime);
+        }
+
+        $stmt = $this->statements['insertMagicMethod'];
+
+        $stmt->bindValue(':islug', $magicMethod->getSlug(), \PDO::PARAM_STR);
+        $stmt->bindValue(':name',  $magicMethod->getName(), \PDO::PARAM_STR);
+        $stmt->bindValue(':uslug', $magicMethod->getSlug(), \PDO::PARAM_STR);
 
         $stmt->execute();
     }

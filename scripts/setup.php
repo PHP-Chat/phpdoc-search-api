@@ -189,6 +189,19 @@ $dbSchema = [
         COLLATE utf8_general_ci
     ",
     "
+        CREATE TABLE `magicmethods`
+        (
+            `id`        INT          UNSIGNED NOT NULL AUTO_INCREMENT,
+            `slug`      VARCHAR(255) NOT NULL,
+            `name`      VARCHAR(255) NOT NULL,
+            `last_seen` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+            PRIMARY KEY        (`id`),
+            UNIQUE KEY  `name` (`name`)
+        )
+        COLLATE utf8_general_ci
+    ",
+    "
         CREATE TABLE `inisettings`
         (
             `id`        INT          UNSIGNED NOT NULL AUTO_INCREMENT,

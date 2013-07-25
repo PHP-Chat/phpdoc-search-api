@@ -9,6 +9,7 @@ use \PHPDocSearch\Environment,
     \PHPDocSearch\Symbols\ClassMemberFactory,
     \PHPDocSearch\Symbols\ConfigOptionFactory,
     \PHPDocSearch\Symbols\ControlStructureFactory,
+    \PHPDocSearch\Symbols\MagicMethodFactory,
     \PHPDocSearch\Symbols\ConstantFactory,
     \PHPDocSearch\Symbols\FunctionFactory;
 
@@ -23,6 +24,7 @@ class IndexerFactory
             new BookBuilder(new BookFactory),
             new ConfigOptionBuilder(new ConfigOptionFactory),
             new ControlStructureBuilder(new ControlStructureFactory),
+            new MagicMethodBuilder(new MagicMethodFactory),
             new ConstantBuilder(new ConstantFactory),
             new FunctionBuilder(new FunctionFactory),
             new ClassBuilder(new ClassFactory, new ClassMemberFactory),
