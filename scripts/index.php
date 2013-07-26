@@ -58,22 +58,7 @@ $logger->log('Indexing process started, using ' . $baseDir . ' as base directory
 $xmlBuilder = (new ManualXMLBuilderFactory)->create($env, $logger);
 $indexer = (new IndexerFactory)->create($env, $logger);
 
-$dataMapper = new DataMapper($env, function() use($config) {
-    $host = $config->getOption('db.host');
-    $dbname = $config->getOption('db.name');
-    $user = $config->getOption('db.user');
-    $pass = $config->getOption('db.pass');
-    $charset = 'utf8';
-
-    $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
-    $db = new \PDO($dsn, $user, $pass);
-
-    $db->setAttribute(\PDO::ATTR_ERRMODE,            \PDO::ERRMODE_EXCEPTION);
-    $db->setAttribute(\PDO::ATTR_EMULATE_PREPARES,   false);
-    $db->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
-
-    return $db;
-}, $logger);
+$dataMapper = new DataMapper($env, new PDOProvider($config), $logger);
 
 
 

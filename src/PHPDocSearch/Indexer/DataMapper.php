@@ -3,6 +3,7 @@
 namespace PHPDocSearch\Indexer;
 
 use \PHPDocSearch\Environment,
+    \PHPDocSearch\PDOProvider,
     \PHPDocSearch\Logger,
     \PHPDocSearch\Symbols\Book,
     \PHPDocSearch\Symbols\ClassConstant,
@@ -27,10 +28,10 @@ class DataMapper
 
     private $statements = [];
 
-    public function __construct(Environment $env, callable $dataProvider, Logger $logger)
+    public function __construct(Environment $env, PDOProvider $dataProvider, Logger $logger)
     {
         $this->env = $env;
-        $this->db = $dataProvider();
+        $this->db = $dataProvider->getConnection();
         $this->logger = $logger;
 
         $this->startTime = $env->getStartTime()->format('Y-m-d H:i:s');

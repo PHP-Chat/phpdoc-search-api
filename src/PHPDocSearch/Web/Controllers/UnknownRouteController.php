@@ -2,32 +2,42 @@
 
 namespace PHPDocSearch\Web\Controllers;
 
-use PHPDocSearch\Web\Request,
-    PHPDocSearch\Web\ViewFactory;
+use \PHPDocSearch\Web\ContentNegotiation\ContentTypeResolver,
+    \PHPDocSearch\Web\Request,
+    \PHPDocSearch\Web\ViewFetcher;
 
 class UnknownRouteController
 {
-    private $viewFactory;
+    private $viewFetcher;
 
-    private $contentTypeManager;
+    private $contentTypeResolver;
 
     private $request;
 
-    public function __construct(ViewFactory $viewFactory, ContentTypeManager $contentTypeManager, Request $request)
+    public function __construct(ViewFetcher $viewFetcher, ContentTypeResolver $contentTypeResolver, Request $request)
     {
-        $this->viewFactory = $viewFactory;
-        $this->contentTypeManager = $contentTypeManager;
+        $this->viewFetcher = $viewFetcher;
+        $this->contentTypeResolver = $contentTypeResolver;
         $this->request = $request;
     }
 
     public function handleRequest()
     {
-        if ($this->contentTypeManager->getResponseType() === 'text/html') {
-            $view = $this->viewFactory->createErrorNotFoundHTML($this->request);
-        } else {
-            $view = $this->viewFactory->createErrorNotFoundText($this->request);
+        $acceptTypes = $request->getHeader('Accept');
+        $availableTypes = ['text/html', 'text/plain'];
+        $responseType = $this->contentTypeResolver->getResponseType($acceptTypes, $availableTypes);
+
+        $type = null;
+        switch ($responseType) {
+            case 'text/html':
+                $type = 'html';
+                break;
+
+            case 'text/plain':
+                $type = 'text';
+                break;
         }
 
-        return $view;
+        return $this->viewFetcher->fetch('Error\NotFound', $this->request, $type);
     }
 }
