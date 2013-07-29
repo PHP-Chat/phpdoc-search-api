@@ -11,7 +11,7 @@ class ViewFetcher
         // NB: I don't like this. But it will do for now.
         $className = __NAMESPACE__ . '\\Views\\' . $name;
 
-        if (!class_exists($name)) {
+        if (!class_exists($className)) {
             throw new \InvalidArgumentException('The requested view ' . $name . ' does not exist');
         }
 

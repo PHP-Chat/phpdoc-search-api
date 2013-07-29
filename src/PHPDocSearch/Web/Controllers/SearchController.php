@@ -31,32 +31,26 @@ class SearchController
 
     public function handleRequest()
     {
-        $acceptTypes = $request->getHeader('Accept');
-        $availableTypes = ['application/json', 'text/json', 'application/xml', 'text/xml'];
+        $acceptTypes = $this->request->getHeader('Accept');
+        $availableTypes = ['application/json', 'text/json'];//, 'application/xml', 'text/xml'];
         $responseType = $this->contentTypeResolver->getResponseType($acceptTypes, $availableTypes);
 
-        $type = null;
-
         if ($responseType) {
-            $searchProvider = $this->searchProviderFactory->create($this->request);
+            if ($this->request->hasArg('q')) {
+                $searchProvider = $this->searchProviderFactory->create($this->request);
 
-            $type = explode('/', $responseType, 2)[1];
-            $view = $this->viewFetcher->fetch('Search', $this->request, $type, $this->searchProvider);
+                $view = $this->viewFetcher->fetch('Search', $this->request, $responseType, $searchProvider);
+            } else {
+                $availableTypes = ['text/html', 'text/plain'];
+                $responseType = $this->contentTypeResolver->getResponseType($acceptTypes, $availableTypes);
+
+                $view = $this->viewFetcher->fetch('Error\BadRequest', $this->request, $responseType);
+            }
         } else {
             $availableTypes = ['text/html', 'text/plain'];
             $responseType = $this->contentTypeResolver->getResponseType($acceptTypes, $availableTypes);
 
-            switch ($responseType) {
-                case 'text/html':
-                    $type = 'html';
-                    break;
-
-                case 'text/plain':
-                    $type = 'text';
-                    break;
-            }
-
-            $view = $this->viewFetcher->fetch('Error\NotAcceptable', $this->request, $type);
+            $view = $this->viewFetcher->fetch('Error\NotAcceptable', $this->request, $responseType);
         }
 
         return $view;

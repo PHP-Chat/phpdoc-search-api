@@ -8,7 +8,9 @@ class ConfigOption extends GlobalSymbol
 
     private function makeLink()
     {
-        return 'http://php.net/' . $this->slug;
+        $iniBase = $this->book ? $this->book->getSlug() . '.configuration' : 'ini.core';
+
+        return 'http://php.net/' . $iniBase . '#' . $this->slug;
     }
 
     public function setType($type)
@@ -24,9 +26,9 @@ class ConfigOption extends GlobalSymbol
     public function jsonSerialize()
     {
         return (object) [
-            'name' => $this->shortName,
+            'name' => $this->name,
             'type' => $this->type,
-            'book' => $this->book->getShortName(),
+            'book' => $this->book ? $this->book->getShortName() : null,
             'link' => $this->makeLink(),
         ];
     }

@@ -23,21 +23,10 @@ class UnknownRouteController
 
     public function handleRequest()
     {
-        $acceptTypes = $request->getHeader('Accept');
+        $acceptTypes = $this->request->getHeader('Accept');
         $availableTypes = ['text/html', 'text/plain'];
         $responseType = $this->contentTypeResolver->getResponseType($acceptTypes, $availableTypes);
 
-        $type = null;
-        switch ($responseType) {
-            case 'text/html':
-                $type = 'html';
-                break;
-
-            case 'text/plain':
-                $type = 'text';
-                break;
-        }
-
-        return $this->viewFetcher->fetch('Error\NotFound', $this->request, $type);
+        return $this->viewFetcher->fetch('Error\NotFound', $this->request, $responseType);
     }
 }

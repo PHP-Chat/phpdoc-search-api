@@ -1,6 +1,6 @@
 <?php
 
-namespace PHPDocSearch;
+namespace PHPDocSearch\Web;
 
 use \PHPDocSearch\Config,
     \PHPDocSearch\Environment;

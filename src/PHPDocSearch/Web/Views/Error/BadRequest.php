@@ -7,7 +7,7 @@ use \PHPDocSearch\Web\Views\View,
     \PHPDocSearch\Web\Request,
     \PHPDocSearch\Web\ContentNegotiation\ContentType;
 
-class NotAcceptable implements View
+class NotFound implements View
 {
     private $request;
 
@@ -24,7 +24,7 @@ class NotAcceptable implements View
 
     public function render()
     {
-        header($this->request->getServerParam('SERVER_PROTOCOL') . ' 406 Not Acceptable');
+        header($this->request->getServerParam('SERVER_PROTOCOL') . ' 404 Not Found');
 
         switch ($this->contentType->getSubType()) {
             case 'html':
@@ -44,7 +44,7 @@ class NotAcceptable implements View
         }
 
         if ($path) {
-            $message = 'The requested URI ' . $this->request->getPath() . ' is not available in an acceptable format for your user agent';
+            $message = 'The request was malformed or incomplete';
             include $path;
         }
     }

@@ -4,7 +4,9 @@ namespace PHPDocSearch\Symbols;
 
 abstract class ClassMember extends Symbol
 {
-    private $ownerClass;
+    protected $ownerClass;
+
+    protected $memberClass;
 
     public function setOwnerClass(GlobalClass $class)
     {
@@ -16,5 +18,17 @@ abstract class ClassMember extends Symbol
     public function getOwnerClass()
     {
         return $this->ownerClass;
+    }
+
+    public function setMemberClass(GlobalClass $class)
+    {
+        if ($this->memberClass === null) {
+            $this->memberClass = $class;
+        }
+    }
+
+    public function getMemberClass()
+    {
+        return $this->memberClass;
     }
 }

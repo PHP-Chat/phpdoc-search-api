@@ -21,7 +21,7 @@ class Router
                 return $this->controllerFactory->createSearchController($request);
 
             default:
-                return $this->controllerFactory->createUnknownRouterController($request);
+                return $this->controllerFactory->createUnknownRouteController($request);
         }
     }
 }

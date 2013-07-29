@@ -14,7 +14,7 @@ class ControllerFactory
 {
     public function createPageController(Request $request)
     {
-        return new PageController(
+        return new IndexController(
             new ViewFetcher,
             new ContentTypeResolver(new ContentTypeBuilder(new ContentTypeFactory)),
             $request
