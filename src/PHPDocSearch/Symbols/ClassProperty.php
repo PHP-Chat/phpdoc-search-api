@@ -4,6 +4,11 @@ namespace PHPDocSearch\Symbols;
 
 class ClassProperty extends ClassMember
 {
+    /**
+     * Get the JSON representation of this object
+     *
+     * @return \stdClass
+     */
     public function jsonSerialize()
     {
         return (object) [

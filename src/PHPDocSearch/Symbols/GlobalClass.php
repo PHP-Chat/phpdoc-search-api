@@ -4,20 +4,60 @@ namespace PHPDocSearch\Symbols;
 
 class GlobalClass extends GlobalSymbol
 {
+    /**
+     * Whether the class member list has been normalised
+     *
+     * @var bool
+     */
     private $isNormalised = false;
 
+    /**
+     * Primary key in database
+     *
+     * @var int
+     */
     private $id;
 
+    /**
+     * The parent class of this class
+     *
+     * @var GlobalClass
+     */
     private $parent;
 
+    /**
+     * Interfaces implemented by this class
+     *
+     * @var GlobalClass[]
+     */
     private $interfaces = [];
 
+    /**
+     * Method members of this class
+     *
+     * @var ClassMethod[]
+     */
     private $methods = [];
 
+    /**
+     * Property members of this class
+     *
+     * @var ClassProperty[]
+     */
     private $properties = [];
 
+    /**
+     * Constant members of this class
+     *
+     * @var ClassConstant[]
+     */
     private $constants = [];
 
+    /**
+     * Inherit members from parent classes
+     *
+     * @param GlobalClass $class
+     */
     private function inheritMembers(GlobalClass $class)
     {
         foreach ($class->getMethods() as $method) {
@@ -37,6 +77,9 @@ class GlobalClass extends GlobalSymbol
         }
     }
 
+    /**
+     * Normalise the members of this class from parents
+     */
     private function normaliseMembers()
     {
         if (!$this->isNormalised) {
@@ -52,36 +95,71 @@ class GlobalClass extends GlobalSymbol
         }
     }
 
+    /**
+     * Get the URL of this class on php.net
+     *
+     * @return string
+     */
     private function makeLink()
     {
         return 'http://php.net/' . $this->slug;
     }
 
+    /**
+     * Set the primary key of this class in the database
+     *
+     * @param int $id
+     */
     public function setId($id)
     {
-        $this->id = $id;
+        $this->id = (int) $id;
     }
 
+    /**
+     * Get the primary key of this class in the database
+     *
+     * @return int
+     */
     public function getId()
     {
         return $this->id;
     }
 
+    /**
+     * Set the parent class of this class
+     *
+     * @param GlobalClass $parent
+     */
     public function setParent(GlobalClass $parent)
     {
         $this->parent = $parent;
     }
 
+    /**
+     * Determine whether this class inherits another class
+     *
+     * @return bool
+     */
     public function hasParent()
     {
         return $this->parent !== null;
     }
 
+    /**
+     * Get the parent class of this class
+     *
+     * @return GlobalClass
+     */
     public function getParent()
     {
         return $this->parent;
     }
 
+    /**
+     * Add a member to this class
+     *
+     * @param ClassMember $member
+     */
     public function addMember(ClassMember $member)
     {
         if ($member instanceof ClassMethod) {
@@ -100,6 +178,11 @@ class GlobalClass extends GlobalSymbol
         }
     }
 
+    /**
+     * Get the method members of this class
+     *
+     * @return ClassMethod[]
+     */
     public function getMethods()
     {
         $this->normaliseMembers();
@@ -107,6 +190,11 @@ class GlobalClass extends GlobalSymbol
         return $this->methods;
     }
 
+    /**
+     * Get the property members of this class
+     *
+     * @return ClassProperty[]
+     */
     public function getProperties()
     {
         $this->normaliseMembers();
@@ -114,6 +202,11 @@ class GlobalClass extends GlobalSymbol
         return $this->properties;
     }
 
+    /**
+     * Get the constant members of this class
+     *
+     * @return ClassConstant[]
+     */
     public function getConstants()
     {
         $this->normaliseMembers();
@@ -121,6 +214,11 @@ class GlobalClass extends GlobalSymbol
         return $this->constants;
     }
 
+    /**
+     * Add an interface implemented by this class
+     *
+     * @param GlobalClass $interface
+     */
     public function addInterface(GlobalClass $interface)
     {
         if (!in_array($interface, $this->interfaces, true)) {
@@ -128,6 +226,11 @@ class GlobalClass extends GlobalSymbol
         }
     }
 
+    /**
+     * Get the interfaces implemented by this class
+     *
+     * @return GlobalClass[]
+     */
     public function getInterfaces()
     {
         $this->normaliseMembers();
@@ -135,10 +238,15 @@ class GlobalClass extends GlobalSymbol
         return $this->interfaces;
     }
 
+    /**
+     * Get the JSON representation of this object
+     *
+     * @return \stdClass
+     */
     public function jsonSerialize()
     {
         return (object) [
-            'name' => $this->shortName,
+            'name' => $this->name,
             'book' => $this->book->getShortName(),
             'link' => $this->makeLink(),
         ];
