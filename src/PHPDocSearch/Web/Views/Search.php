@@ -4,7 +4,7 @@ namespace PHPDocSearch\Web\Views;
 
 use \PHPDocSearch\Web\TemplateFetcher,
     \PHPDocSearch\Web\Request,
-    \PHPDocSearch\Web\ContentNegotiation\ContentType,
+    \PHPDocSearch\Web\ContentNegotiation\MIMEType,
     \PHPDocSearch\Web\Search\SearchProvider,
     \PHPDocSearch\Symbols\Book,
     \PHPDocSearch\Symbols\GlobalClass,
@@ -27,7 +27,7 @@ class Search implements View
 
     private $searchProvider;
 
-    public function __construct(TemplateFetcher $templateFetcher, Request $request, ContentType $contentType, SearchProvider $searchProvider)
+    public function __construct(TemplateFetcher $templateFetcher, Request $request, MIMEType $contentType, SearchProvider $searchProvider)
     {
         $this->templateFetcher = $templateFetcher;
         $this->request = $request;
@@ -132,7 +132,7 @@ class Search implements View
 
     public function render()
     {
-        header("Content-Type: $this->contentType");
+        header("Content-Type: {$this->contentType}");
 
         if ($this->contentType->getSubType() === 'json') {
             return $this->renderJSON();

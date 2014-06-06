@@ -5,7 +5,7 @@ namespace PHPDocSearch\Web\Views\Error;
 use \PHPDocSearch\Web\Views\View,
     \PHPDocSearch\Web\TemplateFetcher,
     \PHPDocSearch\Web\Request,
-    \PHPDocSearch\Web\ContentNegotiation\ContentType;
+    \PHPDocSearch\Web\ContentNegotiation\MIMEType;
 
 class NotFound implements View
 {
@@ -15,7 +15,7 @@ class NotFound implements View
 
     private $contentType;
 
-    public function __construct(TemplateFetcher $templateFetcher, Request $request, ContentType $contentType = null)
+    public function __construct(TemplateFetcher $templateFetcher, Request $request, MIMEType $contentType = null)
     {
         $this->templateFetcher = $templateFetcher;
         $this->request = $request;

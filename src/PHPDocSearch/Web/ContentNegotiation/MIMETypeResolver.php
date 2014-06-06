@@ -2,28 +2,49 @@
 
 namespace PHPDocSearch\Web\ContentNegotiation;
 
-class ContentTypeResolver
+class MIMETypeResolver
 {
-    private $contentTypeBuilder;
+    /**
+     * @var MIMETypeBuilder
+     */
+    private $mimeTypeBuilder;
 
-    public function __construct(ContentTypeBuilder $contentTypeBuilder)
+    /**
+     * Constructor
+     *
+     * @param MIMETypeBuilder $mimeTypeBuilder
+     */
+    public function __construct(MIMETypeBuilder $mimeTypeBuilder)
     {
-        $this->contentTypeBuilder = $contentTypeBuilder;
+        $this->mimeTypeBuilder = $mimeTypeBuilder;
     }
 
+    /**
+     * Parse the value of an Accept: header
+     *
+     * @param $acceptedTypes
+     * @return array
+     */
     private function parseAcceptedTypes($acceptedTypes)
     {
         $result = [];
 
         foreach (explode(',', $acceptedTypes) as $typeSpec) {
-            if ($contentType = $this->contentTypeBuilder->build($typeSpec)) {
-                $result[$contentType->getSuperType()][$contentType->getSubType()][] = $contentType;
+            if ($type = $this->mimeTypeBuilder->build($typeSpec)) {
+                $result[$type->getSuperType()][$type->getSubType()][] = $type;
             }
         }
 
         return $result;
     }
 
+    /**
+     * Get the best matching available type based on an Accept: header value
+     *
+     * @param string $acceptedTypes
+     * @param array $availableTypes
+     * @return MIMEType|null
+     */
     public function getResponseType($acceptedTypes, array $availableTypes)
     {
         if (!$acceptedTypes = $this->parseAcceptedTypes($acceptedTypes)) {
@@ -33,10 +54,12 @@ class ContentTypeResolver
         $weightMap = [];
 
         foreach ($availableTypes as $typeSpec) {
-            $availableType = $this->contentTypeBuilder->build($typeSpec);
+            $availableType = $typeSpec instanceof MIMEType ? $typeSpec : $this->mimeTypeBuilder->build($typeSpec);
+
             $superType = $availableType->getSuperType();
             $subType = $availableType->getSubType();
 
+            /** @var MIMEType[] $candidates */
             if (isset($acceptedTypes[$superType][$subType])) {
                 $candidates = $acceptedTypes[$superType][$subType];
             } else if (isset($acceptedTypes[$superType]['*'])) {

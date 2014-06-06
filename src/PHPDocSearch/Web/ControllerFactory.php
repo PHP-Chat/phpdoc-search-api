@@ -2,9 +2,9 @@
 
 namespace PHPDocSearch\Web;
 
-use \PHPDocSearch\Web\ContentNegotiation\ContentTypeResolver,
-    \PHPDocSearch\Web\ContentNegotiation\ContentTypeBuilder,
-    \PHPDocSearch\Web\ContentNegotiation\ContentTypeFactory,
+use \PHPDocSearch\Web\ContentNegotiation\MIMETypeResolver,
+    \PHPDocSearch\Web\ContentNegotiation\MIMETypeBuilder,
+    \PHPDocSearch\Web\ContentNegotiation\MIMETypeFactory,
     \PHPDocSearch\Web\Search\SearchProviderFactory,
     \PHPDocSearch\Web\Controllers\SearchController,
     \PHPDocSearch\Web\Controllers\IndexController,
@@ -16,7 +16,7 @@ class ControllerFactory
     {
         return new IndexController(
             new ViewFetcher,
-            new ContentTypeResolver(new ContentTypeBuilder(new ContentTypeFactory)),
+            new MIMETypeResolver(new MIMETypeBuilder(new MIMETypeFactory)),
             $request
         );
     }
@@ -25,7 +25,7 @@ class ControllerFactory
     {
         return new SearchController(
             new ViewFetcher,
-            new ContentTypeResolver(new ContentTypeBuilder(new ContentTypeFactory)),
+            new MIMETypeResolver(new MIMETypeBuilder(new MIMETypeFactory)),
             new SearchProviderFactory,
             $request
         );
@@ -35,7 +35,7 @@ class ControllerFactory
     {
         return new UnknownRouteController(
             new ViewFetcher,
-            new ContentTypeResolver(new ContentTypeBuilder(new ContentTypeFactory)),
+            new MIMETypeResolver(new MIMETypeBuilder(new MIMETypeFactory)),
             $request
         );
     }

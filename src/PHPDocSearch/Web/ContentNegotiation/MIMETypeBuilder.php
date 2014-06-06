@@ -2,15 +2,29 @@
 
 namespace PHPDocSearch\Web\ContentNegotiation;
 
-class ContentTypeBuilder
+class MIMETypeBuilder
 {
-    private $contentTypeFactory;
+    /**
+     * @var MIMETypeFactory
+     */
+    private $mimeTypeFactory;
 
-    public function __construct(ContentTypeFactory $contentTypeFactory)
+    /**
+     * Constructor
+     *
+     * @param MIMETypeFactory $mimeTypeFactory
+     */
+    public function __construct(MIMETypeFactory $mimeTypeFactory)
     {
-        $this->contentTypeFactory = $contentTypeFactory;
+        $this->mimeTypeFactory = $mimeTypeFactory;
     }
 
+    /**
+     * Build a MIMEType instance from a string
+     *
+     * @param string $typeDef
+     * @return MIMEType|null
+     */
     public function build($typeDef)
     {
         $parts = preg_split('#\s*;\s*#', trim($typeDef), -1, PREG_SPLIT_NO_EMPTY);
@@ -33,13 +47,13 @@ class ContentTypeBuilder
             if (isset($paramParts[1])) {
                 if ($paramParts[0] === 'q') {
                     $qValue = (float) $paramParts[1];
-                    break; // TODO: we don't account for accept-extensions
+                    break; // Note: we don't account for accept-extensions
                 }
 
                 $params[$paramParts[0]] = $paramParts[1];
             }
         }
 
-        return $this->contentTypeFactory->create($superType, $subType, $params, $qValue);
+        return $this->mimeTypeFactory->create($superType, $subType, $params, $qValue);
     }
 }
