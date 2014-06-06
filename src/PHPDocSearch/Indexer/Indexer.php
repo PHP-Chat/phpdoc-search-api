@@ -110,12 +110,14 @@ class Indexer
         $this->logger->log('Indexing books...');
 
         foreach ($xmlWrapper->query('//db:book[starts-with(@xml:id, "book.")]') as $bookEl) {
+            // Build this book object
             if (!$book = $this->bookBuilder->build($bookEl, $xmlWrapper, $bookRegistry)) {
                 continue;
             }
 
             $this->logger->log('Indexing book ' . $book->getName() . '...');
 
+            // Get config options
             $query = ".//db:section[@xml:id='" . $book->getSlug() . ".configuration']//db:varlistentry[@xml:id]";
             $count = 0;
             foreach ($xmlWrapper->query($query, $bookEl) as $varListEntry) {
@@ -126,6 +128,7 @@ class Indexer
             }
             $this->logger->log("  $count config options");
 
+            // Get global constants
             $query = ".//db:appendix[@xml:id='" . $book->getSlug() . ".constants']//db:varlistentry[@xml:id]";
             $count = 0;
             foreach ($xmlWrapper->query($query, $bookEl) as $varListEntry) {
@@ -136,6 +139,7 @@ class Indexer
             }
             $this->logger->log("  $count constants");
 
+            // Get global functions
             $query = ".//db:reference[@xml:id='ref." . $book->getSlug() . "']//db:refentry[starts-with(@xml:id, 'function.')]";
             $count = 0;
             foreach ($xmlWrapper->query($query, $bookEl) as $refEntry) {
@@ -146,6 +150,7 @@ class Indexer
             }
             $this->logger->log("  $count functions");
 
+            // Get global classes
             $query = ".//pd:classref | .//pd:exceptionref";
             $count = 0;
             foreach ($xmlWrapper->query($query, $bookEl) as $classRef) {

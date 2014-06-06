@@ -60,6 +60,138 @@ class DataMapper
     }
 
     /**
+     * Get a cached PDOStatement by ID
+     *
+     * @param string $sql
+     * @return \PDOStatement
+     */
+    private function getStatement($sql)
+    {
+        if (!isset($this->statements[$sql])) {
+            $this->statements[$sql] = $this->db->prepare($sql);
+
+            if (strpos($sql, ':last_seen') !== false) {
+                $this->statements[$sql]->bindValue('last_seen', $this->startTime);
+            }
+        }
+
+        return $this->statements[$sql];
+    }
+
+    /**
+     * Insert a ClassMethod into the database
+     *
+     * @param ClassMethod $method
+     * @param GlobalClass $memberClass
+     */
+    private function insertClassMethod(ClassMethod $method, GlobalClass $memberClass)
+    {
+        $this->logger->log('  Inserting method ' . $method->getName());
+
+        $stmt = $this->getStatement('
+            INSERT INTO `classmethods`
+                (`class_id`, `owner_class_id`, `slug`, `name`)
+            VALUES
+                (:class_id, :iowner_class_id, :islug, :name)
+            ON DUPLICATE KEY UPDATE
+                `owner_class_id` = :uowner_class_id,
+                `slug` = :uslug,
+                `last_seen` = :last_seen
+        ');
+
+        $classId = $memberClass->getId();
+
+        $ownerClass = $method->getOwnerClass();
+        if ($ownerClass->getId() === null) {
+            $this->insertClass($ownerClass);
+        }
+        $ownerClassId = $ownerClass->getId();
+
+        $stmt->bindValue(':class_id',        $classId,           \PDO::PARAM_INT);
+        $stmt->bindValue(':iowner_class_id', $ownerClassId,      \PDO::PARAM_INT);
+        $stmt->bindValue(':uowner_class_id', $ownerClassId,      \PDO::PARAM_INT);
+        $stmt->bindValue(':islug',           $method->getSlug(), \PDO::PARAM_STR);
+        $stmt->bindValue(':uslug',           $method->getSlug(), \PDO::PARAM_STR);
+        $stmt->bindValue(':name',            $method->getName(), \PDO::PARAM_STR);
+
+        $stmt->execute();
+    }
+
+    /**
+     * Insert a ClassProperty into the database
+     *
+     * @param ClassProperty $property
+     * @param GlobalClass $memberClass
+     */
+    private function insertClassProperty(ClassProperty $property, GlobalClass $memberClass)
+    {
+        $this->logger->log('  Inserting property ' . $property->getName());
+
+        $stmt = $this->getStatement("
+            INSERT INTO `classprops`
+                (`class_id`, `owner_class_id`, `slug`, `name`)
+            VALUES
+                (:class_id, :iowner_class_id, :islug, :name)
+            ON DUPLICATE KEY UPDATE
+                `owner_class_id` = :uowner_class_id,
+                `slug` = :uslug,
+                `last_seen` = :last_seen
+        ");
+
+        $ownerClass = $property->getOwnerClass();
+        if ($ownerClass->getId() === null) {
+            $this->insertClass($ownerClass);
+        }
+        $ownerClassId = $ownerClass->getId();
+
+        $stmt->bindValue(':class_id',        $memberClass->getId(), \PDO::PARAM_INT);
+        $stmt->bindValue(':iowner_class_id', $ownerClassId,         \PDO::PARAM_INT);
+        $stmt->bindValue(':uowner_class_id', $ownerClassId,         \PDO::PARAM_INT);
+        $stmt->bindValue(':islug',           $property->getSlug(),  \PDO::PARAM_STR);
+        $stmt->bindValue(':uslug',           $property->getSlug(),  \PDO::PARAM_STR);
+        $stmt->bindValue(':name',            $property->getName(),  \PDO::PARAM_STR);
+
+        $stmt->execute();
+    }
+
+    /**
+     * Insert a ClassConstant into the database
+     *
+     * @param ClassConstant $constant
+     * @param GlobalClass $memberClass
+     */
+    private function insertClassConstant(ClassConstant $constant, GlobalClass $memberClass)
+    {
+        $this->logger->log('  Inserting constant ' . $constant->getName());
+
+        $stmt = $this->getStatement("
+            INSERT INTO `classconstants`
+                (`class_id`, `owner_class_id`, `slug`, `name`)
+            VALUES
+                (:class_id, :iowner_class_id, :islug, :name)
+            ON DUPLICATE KEY UPDATE
+                `owner_class_id` = :uowner_class_id,
+                `slug` = :uslug,
+                `last_seen` = :last_seen
+        ");
+
+        $ownerClass = $constant->getOwnerClass();
+        if ($ownerClass->getId() === null) {
+            $this->insertClass($ownerClass);
+        }
+        $ownerClassId = $ownerClass->getId();
+
+        $stmt->bindValue(':class_id',        $memberClass->getId(), \PDO::PARAM_INT);
+        $stmt->bindValue(':iowner_class_id', $ownerClassId,         \PDO::PARAM_INT);
+        $stmt->bindValue(':uowner_class_id', $ownerClassId,         \PDO::PARAM_INT);
+        $stmt->bindValue(':islug',           $constant->getSlug(),  \PDO::PARAM_STR);
+        $stmt->bindValue(':uslug',           $constant->getSlug(),  \PDO::PARAM_STR);
+        $stmt->bindValue(':name',            $constant->getName(),  \PDO::PARAM_STR);
+
+        $stmt->execute();
+    }
+
+    /**
      * Insert a Book into the database
      *
      * @param Book $book
@@ -68,22 +200,16 @@ class DataMapper
     {
         $this->logger->log('Inserting book ' . $book->getName() . '...');
 
-        if (!isset($this->statements['insertBook'])) {
-            $this->statements['insertBook'] = $this->db->prepare("
-                INSERT INTO `books`
-                    (`slug`, `full_name`, `short_name`)
-                VALUES
-                    (:slug, :ifull_name, :ishort_name)
-                ON DUPLICATE KEY UPDATE
-                    `full_name`  = :ufull_name,
-                    `short_name` = :ushort_name,
-                    `last_seen`  = :last_seen
-            ");
-
-            $this->statements['insertBook']->bindValue('last_seen', $this->startTime);
-        }
-
-        $stmt = $this->statements['insertBook'];
+        $stmt = $this->getStatement('
+            INSERT INTO `books`
+                (`slug`, `full_name`, `short_name`)
+            VALUES
+                (:slug, :ifull_name, :ishort_name)
+            ON DUPLICATE KEY UPDATE
+                `full_name`  = :ufull_name,
+                `short_name` = :ushort_name,
+                `last_seen`  = :last_seen
+        ');
 
         $stmt->bindValue('slug',        $book->getSlug(),      \PDO::PARAM_STR);
         $stmt->bindValue('ifull_name',  $book->getName(),      \PDO::PARAM_STR);
@@ -115,55 +241,51 @@ class DataMapper
      */
     public function insertClass(GlobalClass $class)
     {
-        if ($class->getId() === null) {
-            $this->logger->log('Inserting class ' . $class->getName() . '...');
+        if ($class->getId() !== null) {
+            return;
+        }
 
-            if (!isset($this->statements['insertClass'])) {
-                $this->statements['insertClass'] = $this->db->prepare("
-                    INSERT INTO `classes`
-                        (`book_id`, `slug`, `name`, `parent`)
-                    VALUES
-                        (:book_id, :slug, :name, :iparent)
-                    ON DUPLICATE KEY UPDATE
-                        `parent` = :uparent,
-                        `last_seen` = :last_seen
-                ");
+        $this->logger->log('Inserting class ' . $class->getName() . '...');
 
-                $this->statements['insertClass']->bindValue('last_seen', $this->startTime);
-            }
+        $stmt = $this->getStatement('
+            INSERT INTO `classes`
+                (`book_id`, `slug`, `name`, `parent`)
+            VALUES
+                (:book_id, :slug, :name, :iparent)
+            ON DUPLICATE KEY UPDATE
+                `parent` = :uparent,
+                `last_seen` = :last_seen
+        ');
 
-            $stmt = $this->statements['insertClass'];
+        $parent = $class->getParent();
+        if ($parent && $parent->getId() === null) {
+            $this->insertClass($parent);
+        }
+        $parentId = $parent ? $parent->getId() : null;
 
-            $parent = $class->getParent();
-            if ($parent && $parent->getId() === null) {
-                $this->insertClass($parent);
-            }
-            $parentId = $parent ? $parent->getId() : null;
+        $book = $class->getBook();
+        $bookId = $book ? $book->getId() : null;
 
-            $book = $class->getBook();
-            $bookId = $book ? $book->getId() : null;
+        $stmt->bindValue(':book_id', $bookId,           \PDO::PARAM_INT);
+        $stmt->bindValue(':slug',    $class->getSlug(), \PDO::PARAM_STR);
+        $stmt->bindValue(':name',    $class->getName(), \PDO::PARAM_STR);
+        $stmt->bindValue(':iparent', $parentId,         \PDO::PARAM_INT);
+        $stmt->bindValue(':uparent', $parentId,         \PDO::PARAM_INT);
 
-            $stmt->bindValue(':book_id', $bookId,           \PDO::PARAM_INT);
-            $stmt->bindValue(':slug',    $class->getSlug(), \PDO::PARAM_STR);
-            $stmt->bindValue(':name',    $class->getName(), \PDO::PARAM_STR);
-            $stmt->bindValue(':iparent', $parentId,         \PDO::PARAM_INT);
-            $stmt->bindValue(':uparent', $parentId,         \PDO::PARAM_INT);
+        $stmt->execute();
 
-            $stmt->execute();
+        $class->setId($this->db->lastInsertId());
 
-            $class->setId($this->db->lastInsertId());
+        foreach ($class->getMethods() as $method) {
+            $this->insertClassMethod($method, $class);
+        }
 
-            foreach ($class->getMethods() as $method) {
-                $this->insertClassMethod($method, $class);
-            }
+        foreach ($class->getProperties() as $property) {
+            $this->insertClassProperty($property, $class);
+        }
 
-            foreach ($class->getProperties() as $property) {
-                $this->insertClassProperty($property, $class);
-            }
-
-            foreach ($class->getConstants() as $constant) {
-                $this->insertClassConstant($constant, $class);
-            }
+        foreach ($class->getConstants() as $constant) {
+            $this->insertClassConstant($constant, $class);
         }
     }
 
@@ -176,22 +298,16 @@ class DataMapper
     {
         $this->logger->log('  Inserting config option ' . $configOption->getName());
 
-        if (!isset($this->statements['insertConfigOption'])) {
-            $this->statements['insertConfigOption'] = $this->db->prepare("
-                INSERT INTO `inisettings`
-                    (`book_id`, `slug`, `name`, `type`)
-                VALUES
-                    (:book_id, :slug, :iname, :itype)
-                ON DUPLICATE KEY UPDATE
-                    `name` = :uname,
-                    `type` = :utype,
-                    `last_seen` = :last_seen
-            ");
-
-            $this->statements['insertConfigOption']->bindValue('last_seen', $this->startTime);
-        }
-
-        $stmt = $this->statements['insertConfigOption'];
+        $stmt = $this->getStatement('
+            INSERT INTO `inisettings`
+                (`book_id`, `slug`, `name`, `type`)
+            VALUES
+                (:book_id, :slug, :iname, :itype)
+            ON DUPLICATE KEY UPDATE
+                `name` = :uname,
+                `type` = :utype,
+                `last_seen` = :last_seen
+        ');
 
         $book = $configOption->getBook();
         $bookId = $book ? $book->getId() : null;
@@ -215,21 +331,15 @@ class DataMapper
     {
         $this->logger->log('Inserting control structure ' . $controlStructure->getName());
 
-        if (!isset($this->statements['insertControlStructure'])) {
-            $this->statements['insertControlStructure'] = $this->db->prepare("
-                INSERT INTO `controlstructures`
-                    (`slug`, `name`)
-                VALUES
-                    (:islug, :name)
-                ON DUPLICATE KEY UPDATE
-                    `slug` = :uslug,
-                    `last_seen` = :last_seen
-            ");
-
-            $this->statements['insertControlStructure']->bindValue('last_seen', $this->startTime);
-        }
-
-        $stmt = $this->statements['insertControlStructure'];
+        $stmt = $this->getStatement('
+            INSERT INTO `controlstructures`
+                (`slug`, `name`)
+            VALUES
+                (:islug, :name)
+            ON DUPLICATE KEY UPDATE
+                `slug` = :uslug,
+                `last_seen` = :last_seen
+        ');
 
         $stmt->bindValue(':islug', $controlStructure->getSlug(), \PDO::PARAM_STR);
         $stmt->bindValue(':name',  $controlStructure->getName(), \PDO::PARAM_STR);
@@ -247,21 +357,15 @@ class DataMapper
     {
         $this->logger->log('Inserting magic method ' . $magicMethod->getName());
 
-        if (!isset($this->statements['insertMagicMethod'])) {
-            $this->statements['insertMagicMethod'] = $this->db->prepare("
-                INSERT INTO `magicmethods`
-                    (`slug`, `name`)
-                VALUES
-                    (:islug, :name)
-                ON DUPLICATE KEY UPDATE
-                    `slug` = :uslug,
-                    `last_seen` = :last_seen
-            ");
-
-            $this->statements['insertMagicMethod']->bindValue('last_seen', $this->startTime);
-        }
-
-        $stmt = $this->statements['insertMagicMethod'];
+        $stmt = $this->getStatement('
+            INSERT INTO `magicmethods`
+                (`slug`, `name`)
+            VALUES
+                (:islug, :name)
+            ON DUPLICATE KEY UPDATE
+                `slug` = :uslug,
+                `last_seen` = :last_seen
+        ');
 
         $stmt->bindValue(':islug', $magicMethod->getSlug(), \PDO::PARAM_STR);
         $stmt->bindValue(':name',  $magicMethod->getName(), \PDO::PARAM_STR);
@@ -279,22 +383,16 @@ class DataMapper
     {
         $this->logger->log('  Inserting constant ' . $constant->getName());
 
-        if (!isset($this->statements['insertConstant'])) {
-            $this->statements['insertConstant'] = $this->db->prepare("
-                INSERT INTO `constants`
-                    (`book_id`, `slug`, `name`, `type`)
-                VALUES
-                    (:book_id, :slug, :iname, :itype)
-                ON DUPLICATE KEY UPDATE
-                    `name` = :uname,
-                    `type` = :utype,
-                    `last_seen` = :last_seen
-            ");
-
-            $this->statements['insertConstant']->bindValue('last_seen', $this->startTime);
-        }
-
-        $stmt = $this->statements['insertConstant'];
+        $stmt = $this->getStatement('
+            INSERT INTO `constants`
+                (`book_id`, `slug`, `name`, `type`)
+            VALUES
+                (:book_id, :slug, :iname, :itype)
+            ON DUPLICATE KEY UPDATE
+                `name` = :uname,
+                `type` = :utype,
+                `last_seen` = :last_seen
+        ');
 
         $book = $constant->getBook();
         $bookId = $book ? $book->getId() : null;
@@ -318,157 +416,20 @@ class DataMapper
     {
         $this->logger->log('  Inserting function ' . $function->getName());
 
-        if (!isset($this->statements['insertFunction'])) {
-            $this->statements['insertFunction'] = $this->db->prepare("
-                INSERT INTO `functions`
-                    (`book_id`, `slug`, `name`)
-                VALUES
-                    (:book_id, :slug, :iname)
-                ON DUPLICATE KEY UPDATE
-                    `name` = :uname,
-                    `last_seen` = :last_seen
-            ");
-
-            $this->statements['insertFunction']->bindValue('last_seen', $this->startTime);
-        }
-
-        $stmt = $this->statements['insertFunction'];
+        $stmt = $this->getStatement('
+            INSERT INTO `functions`
+                (`book_id`, `slug`, `name`)
+            VALUES
+                (:book_id, :slug, :iname)
+            ON DUPLICATE KEY UPDATE
+                `name` = :uname,
+                `last_seen` = :last_seen
+        ');
 
         $stmt->bindValue(':book_id', $function->getBook()->getId(), \PDO::PARAM_INT);
         $stmt->bindValue(':slug',    $function->getSlug(),          \PDO::PARAM_STR);
         $stmt->bindValue(':iname',   $function->getName(),          \PDO::PARAM_STR);
         $stmt->bindValue(':uname',   $function->getName(),          \PDO::PARAM_STR);
-
-        $stmt->execute();
-    }
-
-    /**
-     * Insert a ClassMethod into the database
-     *
-     * @param ClassMethod $method
-     * @param GlobalClass $memberClass
-     */
-    private function insertClassMethod(ClassMethod $method, GlobalClass $memberClass)
-    {
-        $this->logger->log('  Inserting method ' . $method->getName());
-
-        if (!isset($this->statements['insertClassMethod'])) {
-            $this->statements['insertClassMethod'] = $this->db->prepare("
-                INSERT INTO `classmethods`
-                    (`class_id`, `owner_class_id`, `slug`, `name`)
-                VALUES
-                    (:class_id, :iowner_class_id, :islug, :name)
-                ON DUPLICATE KEY UPDATE
-                    `owner_class_id` = :uowner_class_id,
-                    `slug` = :uslug,
-                    `last_seen` = :last_seen
-            ");
-
-            $this->statements['insertClassMethod']->bindValue('last_seen', $this->startTime);
-        }
-
-        $stmt = $this->statements['insertClassMethod'];
-
-        $classId = $memberClass->getId();
-
-        $ownerClass = $method->getOwnerClass();
-        if ($ownerClass->getId() === null) {
-            $this->insertClass($ownerClass);
-        }
-        $ownerClassId = $ownerClass->getId();
-
-        $stmt->bindValue(':class_id',        $classId,           \PDO::PARAM_INT);
-        $stmt->bindValue(':iowner_class_id', $ownerClassId,      \PDO::PARAM_INT);
-        $stmt->bindValue(':uowner_class_id', $ownerClassId,      \PDO::PARAM_INT);
-        $stmt->bindValue(':islug',           $method->getSlug(), \PDO::PARAM_STR);
-        $stmt->bindValue(':uslug',           $method->getSlug(), \PDO::PARAM_STR);
-        $stmt->bindValue(':name',            $method->getName(), \PDO::PARAM_STR);
-
-        $stmt->execute();
-    }
-
-    /**
-     * Insert a ClassProperty into the database
-     *
-     * @param ClassProperty $property
-     * @param GlobalClass $memberClass
-     */
-    private function insertClassProperty(ClassProperty $property, GlobalClass $memberClass)
-    {
-        $this->logger->log('  Inserting property ' . $property->getName());
-
-        if (!isset($this->statements['insertClassProperty'])) {
-            $this->statements['insertClassProperty'] = $this->db->prepare("
-                INSERT INTO `classprops`
-                    (`class_id`, `owner_class_id`, `slug`, `name`)
-                VALUES
-                    (:class_id, :iowner_class_id, :islug, :name)
-                ON DUPLICATE KEY UPDATE
-                    `owner_class_id` = :uowner_class_id,
-                    `slug` = :uslug,
-                    `last_seen` = :last_seen
-            ");
-
-            $this->statements['insertClassProperty']->bindValue('last_seen', $this->startTime);
-        }
-
-        $stmt = $this->statements['insertClassProperty'];
-
-        $ownerClass = $property->getOwnerClass();
-        if ($ownerClass->getId() === null) {
-            $this->insertClass($ownerClass);
-        }
-        $ownerClassId = $ownerClass->getId();
-
-        $stmt->bindValue(':class_id',        $memberClass->getId(), \PDO::PARAM_INT);
-        $stmt->bindValue(':iowner_class_id', $ownerClassId,         \PDO::PARAM_INT);
-        $stmt->bindValue(':uowner_class_id', $ownerClassId,         \PDO::PARAM_INT);
-        $stmt->bindValue(':islug',           $property->getSlug(),  \PDO::PARAM_STR);
-        $stmt->bindValue(':uslug',           $property->getSlug(),  \PDO::PARAM_STR);
-        $stmt->bindValue(':name',            $property->getName(),  \PDO::PARAM_STR);
-
-        $stmt->execute();
-    }
-
-    /**
-     * Insert a ClassConstant into the database
-     *
-     * @param ClassConstant $constant
-     * @param GlobalClass $memberClass
-     */
-    private function insertClassConstant(ClassConstant $constant, GlobalClass $memberClass)
-    {
-        $this->logger->log('  Inserting constant ' . $constant->getName());
-
-        if (!isset($this->statements['insertClassConstant'])) {
-            $this->statements['insertClassConstant'] = $this->db->prepare("
-                INSERT INTO `classconstants`
-                    (`class_id`, `owner_class_id`, `slug`, `name`)
-                VALUES
-                    (:class_id, :iowner_class_id, :islug, :name)
-                ON DUPLICATE KEY UPDATE
-                    `owner_class_id` = :uowner_class_id,
-                    `slug` = :uslug,
-                    `last_seen` = :last_seen
-            ");
-
-            $this->statements['insertClassConstant']->bindValue('last_seen', $this->startTime);
-        }
-
-        $stmt = $this->statements['insertClassConstant'];
-
-        $ownerClass = $constant->getOwnerClass();
-        if ($ownerClass->getId() === null) {
-            $this->insertClass($ownerClass);
-        }
-        $ownerClassId = $ownerClass->getId();
-
-        $stmt->bindValue(':class_id',        $memberClass->getId(), \PDO::PARAM_INT);
-        $stmt->bindValue(':iowner_class_id', $ownerClassId,         \PDO::PARAM_INT);
-        $stmt->bindValue(':uowner_class_id', $ownerClassId,         \PDO::PARAM_INT);
-        $stmt->bindValue(':islug',           $constant->getSlug(),  \PDO::PARAM_STR);
-        $stmt->bindValue(':uslug',           $constant->getSlug(),  \PDO::PARAM_STR);
-        $stmt->bindValue(':name',            $constant->getName(),  \PDO::PARAM_STR);
 
         $stmt->execute();
     }

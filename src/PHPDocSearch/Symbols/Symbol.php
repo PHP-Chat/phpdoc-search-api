@@ -19,6 +19,13 @@ abstract class Symbol implements \JsonSerializable
     protected $slug;
 
     /**
+     * Primary key in database
+     *
+     * @var int
+     */
+    protected $id;
+
+    /**
      * Get the name of this symbol
      *
      * @return string
@@ -60,6 +67,26 @@ abstract class Symbol implements \JsonSerializable
         if ($this->slug === null) {
             $this->slug = trim($slug);
         }
+    }
+
+    /**
+     * Set the primary key of this symbol in the database
+     *
+     * @param int $id
+     */
+    public function setId($id)
+    {
+        $this->id = (int) $id;
+    }
+
+    /**
+     * Get the primary key of this symbol in the database
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
     }
 
     /**

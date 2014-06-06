@@ -12,13 +12,6 @@ class GlobalClass extends GlobalSymbol
     private $isNormalised = false;
 
     /**
-     * Primary key in database
-     *
-     * @var int
-     */
-    private $id;
-
-    /**
      * The parent class of this class
      *
      * @var GlobalClass
@@ -103,26 +96,6 @@ class GlobalClass extends GlobalSymbol
     private function makeLink()
     {
         return 'http://php.net/' . $this->slug;
-    }
-
-    /**
-     * Set the primary key of this class in the database
-     *
-     * @param int $id
-     */
-    public function setId($id)
-    {
-        $this->id = (int) $id;
-    }
-
-    /**
-     * Get the primary key of this class in the database
-     *
-     * @return int
-     */
-    public function getId()
-    {
-        return $this->id;
     }
 
     /**

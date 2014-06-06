@@ -5,13 +5,6 @@ namespace PHPDocSearch\Symbols;
 class Book extends Symbol
 {
     /**
-     * Primary key in database
-     *
-     * @var int
-     */
-    private $id;
-
-    /**
      * Short name of this book
      *
      * @var
@@ -54,26 +47,6 @@ class Book extends Symbol
     private function makeLink()
     {
         return 'http://php.net/book.' . $this->slug;
-    }
-
-    /**
-     * Set the primary key of this book in the database
-     *
-     * @param int $id
-     */
-    public function setId($id)
-    {
-        $this->id = (int) $id;
-    }
-
-    /**
-     * Get the primary key of this book in the database
-     *
-     * return int
-     */
-    public function getId()
-    {
-        return $this->id;
     }
 
     /**
