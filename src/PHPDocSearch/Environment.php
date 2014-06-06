@@ -15,6 +15,11 @@ abstract class Environment
     protected $baseDir;
 
     /**
+     * @var \DateTime
+     */
+    private $startTime;
+
+    /**
      * Constructor
      *
      * @param string $baseDir
@@ -25,6 +30,8 @@ abstract class Environment
     {
         $this->setBaseDir($baseDir);
         $this->config = $config;
+
+        $this->startTime = new \DateTime('now');
     }
 
     /**
@@ -76,4 +83,14 @@ abstract class Environment
      * @return mixed
      */
     abstract public function getArg($name, $defaultValue = null);
+
+    /**
+     * Get the time at which this environment was created
+     *
+     * @return \DateTime
+     */
+    public function getStartTime()
+    {
+        return $this->startTime;
+    }
 }

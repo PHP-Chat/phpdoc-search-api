@@ -10,11 +10,6 @@ class CLIEnvironment extends Environment
     private $args = [];
 
     /**
-     * @var \DateTime
-     */
-    private $startTime;
-
-    /**
      * Constructor
      *
      * @param string $baseDir
@@ -25,9 +20,8 @@ class CLIEnvironment extends Environment
     public function __construct($baseDir, Config $config, array $argv)
     {
         parent::__construct($baseDir, $config);
-        $this->parseArgv($argv);
 
-        $this->startTime = new \DateTime('now');
+        $this->parseArgv($argv);
     }
 
     /**
@@ -85,15 +79,5 @@ class CLIEnvironment extends Environment
         }
 
         return $defaultValue;
-    }
-
-    /**
-     * Get the time at which this environment was created
-     *
-     * @return \DateTime
-     */
-    public function getStartTime()
-    {
-        return $this->startTime;
     }
 }
