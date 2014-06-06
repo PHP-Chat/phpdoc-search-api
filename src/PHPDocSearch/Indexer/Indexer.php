@@ -7,26 +7,71 @@ use \PHPDocSearch\Environment,
 
 class Indexer
 {
+    /**
+     * @var Environment
+     */
     private $env;
 
+    /**
+     * @var BookRegistryFactory
+     */
     private $bookRegistryFactory;
 
+    /**
+     * @var ClassRegistryFactory
+     */
     private $classRegistryFactory;
 
+    /**
+     * @var BookBuilder
+     */
     private $bookBuilder;
 
+    /**
+     * @var ConfigOptionBuilder
+     */
     private $configOptionBuilder;
 
+    /**
+     * @var ControlStructureBuilder
+     */
     private $controlStructureBuilder;
 
+    /**
+     * @var MagicMethodBuilder
+     */
     private $magicMethodBuilder;
 
+    /**
+     * @var ConstantBuilder
+     */
     private $constantBuilder;
 
+    /**
+     * @var FunctionBuilder
+     */
     private $functionBuilder;
 
+    /**
+     * @var ClassBuilder
+     */
     private $classBuilder;
 
+    /**
+     * Constructor
+     *
+     * @param Environment $env
+     * @param BookRegistryFactory $bookRegistryFactory
+     * @param ClassRegistryFactory $classRegistryFactory
+     * @param BookBuilder $bookBuilder
+     * @param ConfigOptionBuilder $configOptionBuilder
+     * @param ControlStructureBuilder $controlStructureBuilder
+     * @param MagicMethodBuilder $magicMethodBuilder
+     * @param ConstantBuilder $constantBuilder
+     * @param FunctionBuilder $functionBuilder
+     * @param ClassBuilder $classBuilder
+     * @param Logger $logger
+     */
     public function __construct(
         Environment $env,
         BookRegistryFactory $bookRegistryFactory,
@@ -53,7 +98,14 @@ class Indexer
         $this->logger = $logger;
     }
 
-    private function indexBooks($xmlWrapper, $bookRegistry, $classRegistry)
+    /**
+     * Index all books in the document
+     *
+     * @param ManualXMLWrapper $xmlWrapper
+     * @param BookRegistry $bookRegistry
+     * @param ClassRegistry $classRegistry
+     */
+    private function indexBooks(ManualXMLWrapper $xmlWrapper, BookRegistry $bookRegistry, ClassRegistry $classRegistry)
     {
         $this->logger->log('Indexing books...');
 
@@ -106,7 +158,13 @@ class Indexer
         }
     }
 
-    private function indexCoreClasses($xmlWrapper, $classRegistry)
+    /**
+     * Index classes that are not defined in a book
+     *
+     * @param ManualXMLWrapper $xmlWrapper
+     * @param ClassRegistry $classRegistry
+     */
+    private function indexCoreClasses(ManualXMLWrapper $xmlWrapper, ClassRegistry $classRegistry)
     {
         $this->logger->log('Indexing core classes...');
 
@@ -121,7 +179,13 @@ class Indexer
         $this->logger->log("  $count entries found");
     }
 
-    private function indexAndStoreErrorConstants($xmlWrapper, $dataMapper)
+    /**
+     * Index and store the error level constants
+     *
+     * @param ManualXMLWrapper $xmlWrapper
+     * @param DataMapper $dataMapper
+     */
+    private function indexAndStoreErrorConstants(ManualXMLWrapper $xmlWrapper, DataMapper $dataMapper)
     {
         $this->logger->log('Indexing/storing error constants...');
 
@@ -137,7 +201,13 @@ class Indexer
         $this->logger->log("  $count entries found");
     }
 
-    private function indexAndStoreCoreConfigOptions($xmlWrapper, $dataMapper)
+    /**
+     * Index and store config options that are not defined in a book
+     *
+     * @param ManualXMLWrapper $xmlWrapper
+     * @param DataMapper $dataMapper
+     */
+    private function indexAndStoreCoreConfigOptions(ManualXMLWrapper $xmlWrapper, DataMapper $dataMapper)
     {
         $this->logger->log('Indexing/storing core config options...');
 
@@ -154,7 +224,13 @@ class Indexer
         $this->logger->log("  $count entries found");
     }
 
-    private function indexAndStoreControlStructures($xmlWrapper, $dataMapper)
+    /**
+     * Index and store the language control structures
+     *
+     * @param ManualXMLWrapper $xmlWrapper
+     * @param DataMapper $dataMapper
+     */
+    private function indexAndStoreControlStructures(ManualXMLWrapper $xmlWrapper, DataMapper $dataMapper)
     {
         $this->logger->log('Indexing/storing control structures...');
 
@@ -171,7 +247,13 @@ class Indexer
         $this->logger->log("  $count entries found");
     }
 
-    private function indexAndStoreMagicMethods($xmlWrapper, $dataMapper)
+    /**
+     * Index and store the magic methods
+     *
+     * @param ManualXMLWrapper $xmlWrapper
+     * @param DataMapper $dataMapper
+     */
+    private function indexAndStoreMagicMethods(ManualXMLWrapper $xmlWrapper, DataMapper $dataMapper)
     {
         $this->logger->log('Indexing/storing magic methods...');
 
@@ -188,7 +270,13 @@ class Indexer
         $this->logger->log("  $count entries found");
     }
 
-    private function storeBooks($bookRegistry, $dataMapper)
+    /**
+     * Store the books from a registry
+     *
+     * @param BookRegistry $bookRegistry
+     * @param DataMapper $dataMapper
+     */
+    private function storeBooks(BookRegistry $bookRegistry, DataMapper $dataMapper)
     {
         $this->logger->log('Storing books...');
 
@@ -197,7 +285,13 @@ class Indexer
         }
     }
 
-    private function storeClasses($classRegistry, $dataMapper)
+    /**
+     * Store the classes from a registry
+     *
+     * @param ClassRegistry $classRegistry
+     * @param DataMapper $dataMapper
+     */
+    private function storeClasses(ClassRegistry $classRegistry, DataMapper $dataMapper)
     {
         $this->logger->log('Storing classes...');
 
@@ -206,6 +300,12 @@ class Indexer
         }
     }
 
+    /**
+     * Index a manual XML document
+     *
+     * @param ManualXMLWrapper $xmlWrapper
+     * @param DataMapper $dataMapper
+     */
     public function index(ManualXMLWrapper $xmlWrapper, DataMapper $dataMapper)
     {
         $bookRegistry = $this->bookRegistryFactory->create();

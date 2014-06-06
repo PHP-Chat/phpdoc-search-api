@@ -15,6 +15,13 @@ use \PHPDocSearch\Environment,
 
 class IndexerFactory
 {
+    /**
+     * Create a new Indexer instance
+     *
+     * @param Environment $env
+     * @param Logger $logger
+     * @return Indexer
+     */
     public function create(Environment $env, Logger $logger)
     {
         return new Indexer(

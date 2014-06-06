@@ -2,17 +2,33 @@
 
 namespace PHPDocSearch\Indexer;
 
-use \PHPDocSearch\Symbols\MagicMethodFactory;
+use \PHPDocSearch\Symbols\MagicMethod,
+    \PHPDocSearch\Symbols\MagicMethodFactory;
 
 class MagicMethodBuilder
 {
+    /**
+     * @var MagicMethodFactory
+     */
     private $magicMethodFactory;
 
+    /**
+     * Constructor
+     *
+     * @param MagicMethodFactory $magicMethodFactory
+     */
     public function __construct(MagicMethodFactory $magicMethodFactory)
     {
         $this->magicMethodFactory = $magicMethodFactory;
     }
 
+    /**
+     * Build a MagicMethod instance from a DOM element
+     *
+     * @param \DOMElement $baseEl
+     * @param ManualXMLWrapper $xmlWrapper
+     * @return MagicMethod|null
+     */
     public function build(\DOMElement $baseEl, ManualXMLWrapper $xmlWrapper)
     {
         if (!$methodNameEl = $xmlWrapper->getFirst(".//db:methodname", $baseEl)) {

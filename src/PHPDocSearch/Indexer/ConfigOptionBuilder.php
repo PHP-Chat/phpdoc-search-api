@@ -2,17 +2,33 @@
 
 namespace PHPDocSearch\Indexer;
 
-use \PHPDocSearch\Symbols\ConfigOptionFactory;
+use \PHPDocSearch\Symbols\ConfigOption,
+    \PHPDocSearch\Symbols\ConfigOptionFactory;
 
 class ConfigOptionBuilder
 {
+    /**
+     * @var ConfigOptionFactory
+     */
     private $configOptionFactory;
 
+    /**
+     * Constructor
+     *
+     * @param ConfigOptionFactory $configOptionFactory
+     */
     public function __construct(ConfigOptionFactory $configOptionFactory)
     {
         $this->configOptionFactory = $configOptionFactory;
     }
 
+    /**
+     * Build a ConfigOption instance from a DOM element
+     *
+     * @param \DOMElement $baseEl
+     * @param ManualXMLWrapper $xmlWrapper
+     * @return ConfigOption|null
+     */
     public function build(\DOMElement $baseEl, ManualXMLWrapper $xmlWrapper)
     {
         if (!$parameterEl = $xmlWrapper->getFirst("./db:term/db:parameter", $baseEl)) {

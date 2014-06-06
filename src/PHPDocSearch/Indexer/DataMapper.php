@@ -18,16 +18,38 @@ use \PHPDocSearch\Environment,
 
 class DataMapper
 {
+    /**
+     * @var Environment
+     */
     private $env;
 
+    /**
+     * @var \PDO
+     */
     private $db;
 
+    /**
+     * @var Logger
+     */
     private $logger;
 
+    /**
+     * @var string
+     */
     private $startTime;
 
+    /**
+     * @var \PDOStatement[]
+     */
     private $statements = [];
 
+    /**
+     * Constructor
+     *
+     * @param Environment $env
+     * @param PDOProvider $dataProvider
+     * @param Logger $logger
+     */
     public function __construct(Environment $env, PDOProvider $dataProvider, Logger $logger)
     {
         $this->env = $env;
@@ -37,6 +59,11 @@ class DataMapper
         $this->startTime = $env->getStartTime()->format('Y-m-d H:i:s');
     }
 
+    /**
+     * Insert a Book into the database
+     *
+     * @param Book $book
+     */
     public function insertBook(Book $book)
     {
         $this->logger->log('Inserting book ' . $book->getName() . '...');
@@ -81,6 +108,11 @@ class DataMapper
         }
     }
 
+    /**
+     * Insert a GlobalClass into the database
+     *
+     * @param GlobalClass $class
+     */
     public function insertClass(GlobalClass $class)
     {
         if ($class->getId() === null) {
@@ -135,6 +167,11 @@ class DataMapper
         }
     }
 
+    /**
+     * Insert a ConfigOption into the database
+     *
+     * @param ConfigOption $configOption
+     */
     public function insertConfigOption(ConfigOption $configOption)
     {
         $this->logger->log('  Inserting config option ' . $configOption->getName());
@@ -169,6 +206,11 @@ class DataMapper
         $stmt->execute();
     }
 
+    /**
+     * Insert a ControlStructure into the database
+     *
+     * @param ControlStructure $controlStructure
+     */
     public function insertControlStructure(ControlStructure $controlStructure)
     {
         $this->logger->log('Inserting control structure ' . $controlStructure->getName());
@@ -196,6 +238,11 @@ class DataMapper
         $stmt->execute();
     }
 
+    /**
+     * Insert a MagicMethod into the database
+     *
+     * @param MagicMethod $magicMethod
+     */
     public function insertMagicMethod(MagicMethod $magicMethod)
     {
         $this->logger->log('Inserting magic method ' . $magicMethod->getName());
@@ -223,6 +270,11 @@ class DataMapper
         $stmt->execute();
     }
 
+    /**
+     * Insert a GlobalConstant into the database
+     *
+     * @param GlobalConstant $constant
+     */
     public function insertConstant(GlobalConstant $constant)
     {
         $this->logger->log('  Inserting constant ' . $constant->getName());
@@ -257,6 +309,11 @@ class DataMapper
         $stmt->execute();
     }
 
+    /**
+     * Insert a GlobalFunction into the database
+     *
+     * @param GlobalFunction $function
+     */
     public function insertFunction(GlobalFunction $function)
     {
         $this->logger->log('  Inserting function ' . $function->getName());
@@ -285,6 +342,12 @@ class DataMapper
         $stmt->execute();
     }
 
+    /**
+     * Insert a ClassMethod into the database
+     *
+     * @param ClassMethod $method
+     * @param GlobalClass $memberClass
+     */
     private function insertClassMethod(ClassMethod $method, GlobalClass $memberClass)
     {
         $this->logger->log('  Inserting method ' . $method->getName());
@@ -314,16 +377,22 @@ class DataMapper
         }
         $ownerClassId = $ownerClass->getId();
 
-        $stmt->bindValue(':class_id',        $memberClass->getId(), \PDO::PARAM_INT);
-        $stmt->bindValue(':iowner_class_id', $ownerClassId,         \PDO::PARAM_INT);
-        $stmt->bindValue(':uowner_class_id', $ownerClassId,         \PDO::PARAM_INT);
-        $stmt->bindValue(':islug',           $method->getSlug(),    \PDO::PARAM_STR);
-        $stmt->bindValue(':uslug',           $method->getSlug(),    \PDO::PARAM_STR);
-        $stmt->bindValue(':name',            $method->getName(),    \PDO::PARAM_STR);
+        $stmt->bindValue(':class_id',        $classId,           \PDO::PARAM_INT);
+        $stmt->bindValue(':iowner_class_id', $ownerClassId,      \PDO::PARAM_INT);
+        $stmt->bindValue(':uowner_class_id', $ownerClassId,      \PDO::PARAM_INT);
+        $stmt->bindValue(':islug',           $method->getSlug(), \PDO::PARAM_STR);
+        $stmt->bindValue(':uslug',           $method->getSlug(), \PDO::PARAM_STR);
+        $stmt->bindValue(':name',            $method->getName(), \PDO::PARAM_STR);
 
         $stmt->execute();
     }
 
+    /**
+     * Insert a ClassProperty into the database
+     *
+     * @param ClassProperty $property
+     * @param GlobalClass $memberClass
+     */
     private function insertClassProperty(ClassProperty $property, GlobalClass $memberClass)
     {
         $this->logger->log('  Inserting property ' . $property->getName());
@@ -361,6 +430,12 @@ class DataMapper
         $stmt->execute();
     }
 
+    /**
+     * Insert a ClassConstant into the database
+     *
+     * @param ClassConstant $constant
+     * @param GlobalClass $memberClass
+     */
     private function insertClassConstant(ClassConstant $constant, GlobalClass $memberClass)
     {
         $this->logger->log('  Inserting constant ' . $constant->getName());

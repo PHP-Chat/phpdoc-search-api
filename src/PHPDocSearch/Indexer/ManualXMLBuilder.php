@@ -3,21 +3,42 @@
 namespace PHPDocSearch\Indexer;
 
 use PHPDocSearch\Logger,
-    PHPDocSearch\CLIEnvironment,
+    PHPDocSearch\Environment,
+    PHPDocSearch\GitRepository,
     PHPDocSearch\GitRepositoryFactory;
 
 class ManualXMLBuilder
 {
+    /**
+     * @var Environment
+     */
     private $env;
 
+    /**
+     * @var GitRepositoryFactory
+     */
     private $repoFactory;
 
+    /**
+     * @var ManualXMLWrapperFactory
+     */
     private $xmlWrapperFactory;
 
+    /**
+     * @var Logger
+     */
     private $logger;
 
+    /**
+     * Constructor
+     *
+     * @param Environment $env
+     * @param GitRepositoryFactory $repoFactory
+     * @param ManualXMLWrapperFactory $xmlWrapperFactory
+     * @param Logger $logger
+     */
     public function __construct(
-        CLIEnvironment $env,
+        Environment $env,
         GitRepositoryFactory $repoFactory,
         ManualXMLWrapperFactory $xmlWrapperFactory,
         Logger $logger
@@ -28,6 +49,11 @@ class ManualXMLBuilder
         $this->logger = $logger;
     }
 
+    /**
+     * Create the required repos
+     *
+     * @return GitRepository[]
+     */
     private function createRepos()
     {
         $baseDir = $this->env->getBaseDir() . DIRECTORY_SEPARATOR;
@@ -38,6 +64,12 @@ class ManualXMLBuilder
         ];
     }
 
+    /**
+     * Sync the repos
+     *
+     * @param GitRepository[] $repos
+     * @return bool
+     */
     private function syncRepos($repos)
     {
         $changed = false;
@@ -50,7 +82,7 @@ class ManualXMLBuilder
             $repo->pull();
 
             if ($repo->getLastCommit() !== $oldHead) {
-                $hasWork = true;
+                $changed = true;
             }
 
             $this->logger->log('  Repository ' . $repo->getName() . ' synced');
@@ -59,6 +91,11 @@ class ManualXMLBuilder
         return $changed;
     }
 
+    /**
+     * Clean the repos
+     *
+     * @param GitRepository[] $repos
+     */
     private function cleanRepos($repos)
     {
         foreach ($repos as $repo) {
@@ -69,6 +106,12 @@ class ManualXMLBuilder
         }
     }
 
+    /**
+     * Compile the XML document
+     *
+     * @param string $tempFile
+     * @return bool
+     */
     private function buildXML($tempFile)
     {
         $this->logger->log('  Building manual XML document');
@@ -85,6 +128,12 @@ class ManualXMLBuilder
         return $exitCode === 0;
     }
 
+    /**
+     * Build the manual XML document and load it into DOM
+     *
+     * @return ManualXMLWrapper
+     * @throws \RuntimeException
+     */
     public function build()
     {
         $srcFile = $this->env->getBaseDir() . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . '.manual.xml';

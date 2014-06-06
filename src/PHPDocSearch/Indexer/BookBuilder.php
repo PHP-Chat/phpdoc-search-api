@@ -2,17 +2,36 @@
 
 namespace PHPDocSearch\Indexer;
 
-use \PHPDocSearch\Symbols\BookFactory;
+use \PHPDocSearch\Symbols\Book,
+    \PHPDocSearch\Symbols\BookFactory;
 
 class BookBuilder
 {
+    /**
+     * Factory which makes Book objects
+     *
+     * @var BookFactory
+     */
     private $bookFactory;
 
+    /**
+     * Constructor
+     *
+     * @param BookFactory $bookFactory
+     */
     public function __construct(BookFactory $bookFactory)
     {
         $this->bookFactory = $bookFactory;
     }
 
+    /**
+     * Build a Book instance from a DOM element
+     *
+     * @param \DOMElement $baseEl
+     * @param ManualXMLWrapper $xmlWrapper
+     * @param BookRegistry $bookRegistry
+     * @return Book|null
+     */
     public function build(\DOMElement $baseEl, ManualXMLWrapper $xmlWrapper, BookRegistry $bookRegistry)
     {
         if (!$titleEl = $xmlWrapper->getFirst('./db:title', $baseEl)) {

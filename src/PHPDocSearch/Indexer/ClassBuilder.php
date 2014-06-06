@@ -2,28 +2,55 @@
 
 namespace PHPDocSearch\Indexer;
 
-use \PHPDocSearch\Symbols\ClassFactory,
+use \PHPDocSearch\Symbols\GlobalClass,
+    \PHPDocSearch\Symbols\ClassFactory,
     \PHPDocSearch\Symbols\ClassMemberFactory;
 
 class ClassBuilder
 {
+    /**
+     * @var ClassFactory
+     */
     private $classFactory;
 
+    /**
+     * @var ClassMemberFactory
+     */
     private $classMemberFactory;
 
+    /**
+     * Constructor
+     *
+     * @param ClassFactory $classFactory
+     * @param ClassMemberFactory $classMemberFactory
+     */
     public function __construct(ClassFactory $classFactory, ClassMemberFactory $classMemberFactory)
     {
         $this->classFactory       = $classFactory;
         $this->classMemberFactory = $classMemberFactory;
     }
 
+    /**
+     * Get the name of a class member from fully qualified name
+     *
+     * @param string $fqName
+     * @return string
+     */
     private function getMemberName($fqName)
     {
         $nameParts = preg_split('/(::|->)/', trim($fqName), -1, PREG_SPLIT_NO_EMPTY);
         return array_pop($nameParts);
     }
 
-    private function processClassSynopsis($baseEl, $class, $xmlWrapper, $classRegistry)
+    /**
+     * Process the class synopsis section
+     *
+     * @param \DOMElement $baseEl
+     * @param GlobalClass $class
+     * @param ManualXMLWrapper $xmlWrapper
+     * @param ClassRegistry $classRegistry
+     */
+    private function processClassSynopsis(\DOMElement $baseEl, GlobalClass $class, ManualXMLWrapper $xmlWrapper, ClassRegistry $classRegistry)
     {
         $class->setSlug($baseEl->getAttribute('xml:id'));
 
@@ -60,9 +87,18 @@ class ClassBuilder
         }
     }
 
-    private function processMethods($baseEl, $class, $xmlWrapper)
+    /**
+     * Process the class methods section
+     *
+     * @param \DOMElement $baseEl
+     * @param GlobalClass $class
+     * @param ManualXMLWrapper $xmlWrapper
+     */
+    private function processMethods(\DOMElement $baseEl, GlobalClass $class, ManualXMLWrapper $xmlWrapper)
     {
         foreach ($xmlWrapper->query(".//db:refentry", $baseEl) as $refEntry) {
+            /** @var \DOMElement $refEntry */
+
             if ($refName = $xmlWrapper->getFirst(".//db:refnamediv/db:refname", $refEntry)) {
                 $name = $this->getMemberName($refName->textContent);
                 $slug = $refEntry->getAttribute('xml:id');
@@ -77,9 +113,18 @@ class ClassBuilder
         }
     }
 
-    private function processPropertiesAndConstants($baseEl, $class, $xmlWrapper)
+    /**
+     * Process the class properties/constants section
+     *
+     * @param \DOMElement $baseEl
+     * @param GlobalClass $class
+     * @param ManualXMLWrapper $xmlWrapper
+     */
+    private function processPropertiesAndConstants(\DOMElement $baseEl, GlobalClass $class, ManualXMLWrapper $xmlWrapper)
     {
         foreach ($xmlWrapper->query(".//db:classsynopsis/db:fieldsynopsis", $baseEl) as $fieldSynopsisEl) {
+            /** @var \DOMElement $fieldSynopsisEl */
+
             // TODO: find an safe, XPath 1.0 compliant way to do this without the loop
             $isConst = false;
             foreach ($xmlWrapper->query(".//db:modifier", $fieldSynopsisEl) as $modifier) {
@@ -90,6 +135,8 @@ class ClassBuilder
             }
 
             if ($varName = $xmlWrapper->getFirst(".//db:varname[@linkend]", $fieldSynopsisEl)) {
+                /** @var \DOMElement $varName */
+
                 $name = $this->getMemberName($varName->textContent);
                 $slug = $varName->getAttribute('linkend');
 
@@ -105,16 +152,21 @@ class ClassBuilder
         }
     }
 
+    /**
+     * Build a GlobalClass instance from a DOM element
+     *
+     * @param \DOMElement $baseEl
+     * @param ManualXMLWrapper $xmlWrapper
+     * @param ClassRegistry $classRegistry
+     * @return GlobalClass|null
+     */
     public function build(\DOMElement $baseEl, ManualXMLWrapper $xmlWrapper, ClassRegistry $classRegistry)
     {
         $class = $this->classFactory->create();
 
         $this->processClassSynopsis($baseEl, $class, $xmlWrapper, $classRegistry);
-        if ($class->getName() === null) {
-            return null;
-        }
 
-        if (!$classRegistry->isRegistered($class->getName())) {
+        if ($class->getName() !== null && !$classRegistry->isRegistered($class->getName())) {
             $this->processMethods($baseEl, $class, $xmlWrapper);
             $this->processPropertiesAndConstants($baseEl, $class, $xmlWrapper);
 
@@ -122,5 +174,7 @@ class ClassBuilder
 
             return $class;
         }
+
+        return null;
     }
 }
