@@ -3,6 +3,7 @@
 namespace PHPDocSearch\Web\Search;
 
 use \PHPDocSearch\PDOProvider,
+    \PHPDocSearch\Web\Request,
     \PHPDocSearch\Symbols\BookFactory,
     \PHPDocSearch\Symbols\ClassFactory,
     \PHPDocSearch\Symbols\ClassMemberFactory,
@@ -14,7 +15,13 @@ use \PHPDocSearch\PDOProvider,
 
 class SearchProviderFactory
 {
-    public function create($request)
+    /**
+     * Create a new SearchProvider instance
+     *
+     * @param Request $request
+     * @return SearchProvider
+     */
+    public function create(Request $request)
     {
         return new SearchProvider(
             new QueryParser(new QueryFactory),

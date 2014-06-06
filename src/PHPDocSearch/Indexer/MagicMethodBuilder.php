@@ -36,6 +36,7 @@ class MagicMethodBuilder
         }
         $name = trim($methodNameEl->textContent);
 
+        /** @var \DOMElement $currentEl */
         $currentEl = $baseEl;
         while ($currentEl = $currentEl->parentNode) {
             if ($currentEl->tagName === 'sect1') {

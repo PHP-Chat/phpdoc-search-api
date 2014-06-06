@@ -6,12 +6,28 @@ use \PHPDocSearch\PDOProvider;
 
 class QueryResolver
 {
+    /**
+     * @var QueryCache
+     */
     private $queryCache;
 
+    /**
+     * @var \PDO
+     */
     private $db;
 
+    /**
+     * @var DataMapper
+     */
     private $dataMapper;
 
+    /**
+     * Constructor
+     *
+     * @param QueryCache $queryCache
+     * @param PDOProvider $dbProvider
+     * @param DataMapper $dataMapper
+     */
     public function __construct(QueryCache $queryCache, PDOProvider $dbProvider, DataMapper $dataMapper)
     {
         $this->queryCache = $queryCache;
@@ -19,11 +35,17 @@ class QueryResolver
         $this->dataMapper = $dataMapper;
     }
 
-    private function buildStatement($query)
+    /**
+     * Build a PDOStatement from a Query
+     *
+     * @param $query
+     * @return \PDOStatement
+     */
+    private function buildStatement(Query $query)
     {
         $queryParts = $queryParams = [];
 
-        if ($query->searchBooks()) {
+        if ($query->willSearchBooks()) {
             $queryParts[] = "
                 SELECT 'book' AS `object_type`, NULL AS `parent`, `short_name` AS `name`, `full_name` as `full`, `slug`, NULL as `type`
                 FROM `books`
@@ -33,7 +55,7 @@ class QueryResolver
             $queryParams['bookSlug'] = $query->getElement(0);
         }
 
-        if ($query->searchClasses()) {
+        if ($query->willSearchClasses()) {
             $queryParts[] = "
                 SELECT 'class' AS `object_type`, `b`.`short_name` AS `parent`, `c`.`name`, NULL as `full`, `c`.`slug`, NULL as `type`
                 FROM `classes` `c`
@@ -43,7 +65,7 @@ class QueryResolver
             $queryParams['className'] = $query->getElement(0);
         }
 
-        if ($query->searchClassMethods()) {
+        if ($query->willSearchClassMethods()) {
             $queryParts[] = "
                 SELECT 'class_method' AS `object_type`, `o`.`name` AS `parent`, `m`.`name`,
                        `c`.`name` as `full`, `m`.`slug`, `o`.`slug` as `type`
@@ -56,7 +78,7 @@ class QueryResolver
             $queryParams['classMethodName'] = $query->getElement(1);
         }
 
-        if ($query->searchClassProperties()) {
+        if ($query->willSearchClassProperties()) {
             $queryParts[] = "
                 SELECT 'class_property' AS `object_type`, `o`.`name` AS `parent`, `m`.`name`,
                        `c`.`name` as `full`, `m`.`slug`, `o`.`slug` as `type`
@@ -69,7 +91,7 @@ class QueryResolver
             $queryParams['classPropertyName'] = $query->getElement(1);
         }
 
-        if ($query->searchClassConstants()) {
+        if ($query->willSearchClassConstants()) {
             $queryParts[] = "
                 SELECT 'class_constant' AS `object_type`, `o`.`name` AS `parent`, `m`.`name`,
                        `c`.`name` as `full`, `m`.`slug`, `o`.`slug` as `type`
@@ -82,7 +104,7 @@ class QueryResolver
             $queryParams['classConstantName'] = $query->getElement(1);
         }
 
-        if ($query->searchConfigOptions()) {
+        if ($query->willSearchConfigOptions()) {
             $queryParts[] = "
                 SELECT 'config_option' AS `object_type`, `b`.`short_name` AS `parent`, `i`.`name`, `b`.`slug` as `full`, `i`.`slug`, `i`.`type`
                 FROM `inisettings` `i`
@@ -92,7 +114,7 @@ class QueryResolver
             $queryParams['configOptionName'] = implode('.', $query->getElements());
         }
 
-        if ($query->searchConstants()) {
+        if ($query->willSearchConstants()) {
             $queryParts[] = "
                 SELECT 'constant' AS `object_type`, `b`.`short_name` AS `parent`, `c`.`name`, NULL as `full`, `c`.`slug`, `c`.`type`
                 FROM `constants` `c`
@@ -102,7 +124,7 @@ class QueryResolver
             $queryParams['constantName'] = $query->getElement(0);
         }
 
-        if ($query->searchControlStructures()) {
+        if ($query->willSearchControlStructures()) {
             $queryParts[] = "
                 SELECT 'control_structure' AS `object_type`, NULL AS `parent`, `name`, NULL as `full`, `slug`, NULL as `type`
                 FROM `controlstructures` `c`
@@ -111,7 +133,7 @@ class QueryResolver
             $queryParams['controlStructureName'] = $query->getElement(0);
         }
 
-        if ($query->searchFunctions()) {
+        if ($query->willSearchFunctions()) {
             $queryParts[] = "
                 SELECT 'function' AS `object_type`, `b`.`short_name` AS `parent`, `f`.`name`, NULL as `full`, `f`.`slug`, NULL as `type`
                 FROM `functions` `f`
@@ -121,7 +143,7 @@ class QueryResolver
             $queryParams['functionName'] = $query->getElement(0);
         }
 
-        if ($query->searchMagicMethods()) {
+        if ($query->willSearchMagicMethods()) {
             $queryParts[] = "
                 SELECT 'magic_mathod' AS `object_type`, NULL AS `parent`, `m`.`name`, NULL as `full`, `m`.`slug`, NULL as `type`
                 FROM `magicmethods` `m`
@@ -139,7 +161,13 @@ class QueryResolver
         return $stmt;
     }
 
-    private function queryDatabase($query)
+    /**
+     * Execute a Query object against the database
+     *
+     * @param Query $query
+     * @return array
+     */
+    private function queryDatabase(Query $query)
     {
         $stmt = $this->buildStatement($query);
         $stmt->execute();
@@ -152,6 +180,12 @@ class QueryResolver
         return $result;
     }
 
+    /**
+     * Get the result set for a Query
+     *
+     * @param Query $query
+     * @return array
+     */
     public function resolve(Query $query)
     {
         $result = $this->queryCache->retrieve($query);

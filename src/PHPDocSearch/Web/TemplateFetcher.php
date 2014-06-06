@@ -4,6 +4,13 @@ namespace PHPDocSearch\Web;
 
 class TemplateFetcher
 {
+    /**
+     * Find the path of the named template for the request type
+     *
+     * @param string $name
+     * @param string $type
+     * @return string|null
+     */
     public function fetch($name, $type = 'html')
     {
         $baseDir = realpath(__DIR__ . '/../../../templates/');

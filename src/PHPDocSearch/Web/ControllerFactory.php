@@ -12,6 +12,12 @@ use \PHPDocSearch\Web\ContentNegotiation\MIMETypeResolver,
 
 class ControllerFactory
 {
+    /**
+     * Create an IndexController instance
+     *
+     * @param Request $request
+     * @return IndexController
+     */
     public function createPageController(Request $request)
     {
         return new IndexController(
@@ -21,6 +27,12 @@ class ControllerFactory
         );
     }
 
+    /**
+     * Create a SearchController instance
+     *
+     * @param Request $request
+     * @return SearchController
+     */
     public function createSearchController(Request $request)
     {
         return new SearchController(
@@ -31,6 +43,12 @@ class ControllerFactory
         );
     }
 
+    /**
+     * Create an UnknownRouteController instance
+     *
+     * @param Request $request
+     * @return UnknownRouteController
+     */
     public function createUnknownRouteController(Request $request)
     {
         return new UnknownRouteController(

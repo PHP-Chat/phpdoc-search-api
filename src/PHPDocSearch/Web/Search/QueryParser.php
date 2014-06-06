@@ -4,13 +4,27 @@ namespace PHPDocSearch\Web\Search;
 
 class QueryParser
 {
+    /**
+     * @var QueryFactory
+     */
     private $queryFactory;
 
+    /**
+     * Constructor
+     *
+     * @param QueryFactory $queryFactory
+     */
     public function __construct(QueryFactory $queryFactory)
     {
         $this->queryFactory = $queryFactory;
     }
 
+    /**
+     * Parse a query string into a query object
+     *
+     * @param $queryString
+     * @return Query
+     */
     public function parse($queryString)
     {
         $queryString = str_replace('-', '_', strtolower(trim($queryString)));
@@ -21,11 +35,12 @@ class QueryParser
             $isFunction = false;
         }
 
-        $expr = '/\s*+(?:\.|::|_>)\s*/';
+        $expr = '/\s*+(?:\.|::|->)\s*/';
         $parts = preg_split($expr, $queryString, -1, PREG_SPLIT_NO_EMPTY);
         $numParts = count($parts);
 
         $flags = 0;
+        $signature = '';
         if ($numParts === 1) {
             if ($isFunction) {
                 $flags = Query::ENTITY_FUNCTION | Query::ENTITY_MAGICMETHOD;

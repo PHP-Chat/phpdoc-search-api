@@ -10,6 +10,7 @@ spl_autoload_register(function($className) {
     }
 
     if (strtolower(substr($className, 0, 12)) === 'phpdocsearch') {
+        /** @noinspection PhpIncludeInspection */
         require $path . '/' . strtr($className, '\\', '/') . '.php';
     }
 });

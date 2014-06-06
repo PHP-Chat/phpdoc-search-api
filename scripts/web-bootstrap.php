@@ -4,8 +4,7 @@ namespace PHPDocSearch;
 
 use \PHPDocSearch\Web\Request,
     \PHPDocSearch\Web\Router,
-    \PHPDocSearch\Web\ControllerFactory,
-    \PHPDocSearch\Web\ViewFactory;
+    \PHPDocSearch\Web\ControllerFactory;
 
 ini_set('display_errors', 0);
 require __DIR__ . '/autoload.php';
@@ -25,7 +24,7 @@ $router = new Router(new ControllerFactory);
 $controller = $router->route($request);
 
 $view = $controller->handleRequest();
-echo $view->render();
+$view->render();
 
 /*
 if (strtoupper($env->getServerParam('REQUEST_METHOD')) !== 'GET') {

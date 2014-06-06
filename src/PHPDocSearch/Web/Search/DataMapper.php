@@ -2,7 +2,8 @@
 
 namespace PHPDocSearch\Web\Search;
 
-use \PHPDocSearch\Symbols\BookFactory,
+use \PHPDocSearch\Symbols\Symbol,
+    \PHPDocSearch\Symbols\BookFactory,
     \PHPDocSearch\Symbols\ClassFactory,
     \PHPDocSearch\Symbols\ClassMemberFactory,
     \PHPDocSearch\Symbols\ConfigOptionFactory,
@@ -13,22 +14,58 @@ use \PHPDocSearch\Symbols\BookFactory,
 
 class DataMapper
 {
+    /**
+     * @var BookFactory
+     */
     private $bookFactory;
 
+    /**
+     * @var ClassFactory
+     */
     private $classFactory;
 
+    /**
+     * @var ClassMemberFactory
+     */
     private $classMemberFactory;
 
+    /**
+     * @var ConfigOptionFactory
+     */
     private $configOptionFactory;
 
+    /**
+     * @var ConstantFactory
+     */
     private $constantFactory;
 
+    /**
+     * @var ControlStructureFactory
+     */
     private $controlStructureFactory;
 
+    /**
+     * @var FunctionFactory
+     */
     private $functionFactory;
 
+    /**
+     * @var MagicMethodFactory
+     */
     private $magicMethodFactory;
 
+    /**
+     * Constructor
+     *
+     * @param BookFactory $bookFactory
+     * @param ClassFactory $classFactory
+     * @param ClassMemberFactory $classMemberFactory
+     * @param ConfigOptionFactory $configOptionFactory
+     * @param ConstantFactory $constantFactory
+     * @param ControlStructureFactory $controlStructureFactory
+     * @param FunctionFactory $functionFactory
+     * @param MagicMethodFactory $magicMethodFactory
+     */
     public function __construct(
         BookFactory $bookFactory,
         ClassFactory $classFactory,
@@ -49,6 +86,12 @@ class DataMapper
         $this->magicMethodFactory = $magicMethodFactory;
     }
 
+    /**
+     * Create a Symbol object from a row returned by the database
+     *
+     * @param array $row
+     * @return Symbol|null
+     */
     public function map(array $row)
     {
         switch ($row['object_type']) {
@@ -171,5 +214,7 @@ class DataMapper
 
                 return $method;
         }
+
+        return null;
     }
 }

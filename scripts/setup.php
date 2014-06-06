@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Get a line of input from the user
+ *
+ * @param string $msg
+ * @param string $default
+ * @return string
+ */
 function get_input($msg, $default = null)
 {
     $result = null;
@@ -22,6 +29,14 @@ function get_input($msg, $default = null)
 
     return $result;
 }
+
+/**
+ * Get a yes/no confirmation from the user
+ *
+ * @param string $msg
+ * @param string $default
+ * @return bool
+ */
 function confirm($msg, $default = null)
 {
     $result = null;
@@ -52,6 +67,13 @@ function confirm($msg, $default = null)
 
     return $result;
 }
+
+/**
+ * Get a password input from the user
+ *
+ * @param string $msg
+ * @return string
+ */
 function get_password($msg)
 {
     if ($isWin = (bool) preg_match('/^win/i', PHP_OS)) {
@@ -71,12 +93,23 @@ function get_password($msg)
     return $result;
 }
 
+/**
+ * Write an error message to STDERR and exit
+ *
+ * @param $msg
+ */
 function fatal_error($msg)
 {
     fwrite(STDERR, "\nFATAL ERROR: " . $msg . "\n\n");
     exit(1);
 }
 
+/**
+ * Generate a random password
+ *
+ * @param int $length
+ * @return string
+ */
 function generate_password($length = 16)
 {
     static $charGroups = [
@@ -324,6 +357,8 @@ echo "\nThis script configures your environment for running the phpdoc indexing 
 
 $installBase = get_input("Enter base installation directory", getcwd());
 
+$dbHost = $dbAdminUser = $dbAdminPass = $dbGrantHost = $dbIndexDBName = $dbIndexDBUser = $dbIndexDBPass = null;
+
 if ($dbSetup = confirm("Do you want to set up the database?", true)) {
     echo "\n";
 
@@ -354,7 +389,7 @@ if (!is_dir($installBase)) {
 $installBase = realpath($installBase);
 if ($installBase === false) {
     echo "Failed\n";
-    fatal_error("Cannot resovle real path of installation base directory");
+    fatal_error("Cannot resolve real path of installation base directory");
 }
 
 foreach (array_keys($repos) as $dir) {
@@ -379,7 +414,7 @@ echo "OK\n";
 if ($dbSetup) {
     echo "Connecting to database... ";
     try {
-        $db = new PDO("mysql:host=$dbHost", $dbAdminUser, $dbAdminPass);
+        $db = new PDO("mysql:host={$dbHost}", $dbAdminUser, $dbAdminPass);
         $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     } catch (PDOException $e) {
         echo "Failed\n";

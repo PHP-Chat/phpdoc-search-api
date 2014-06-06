@@ -5,18 +5,39 @@ namespace PHPDocSearch\Web\Controllers;
 use \PHPDocSearch\Web\ContentNegotiation\MIMETypeResolver,
     \PHPDocSearch\Web\Search\SearchProviderFactory,
     \PHPDocSearch\Web\Request,
+    \PHPDocSearch\Web\Views\View,
     \PHPDocSearch\Web\ViewFetcher;
 
-class SearchController
+class SearchController extends Controller
 {
+    /**
+     * @var ViewFetcher
+     */
     private $viewFetcher;
 
+    /**
+     * @var MIMETypeResolver
+     */
     private $mimeTypeResolver;
 
+    /**
+     * @var SearchProviderFactory
+     */
     private $searchProviderFactory;
 
+    /**
+     * @var Request
+     */
     private $request;
 
+    /**
+     * Constructor
+     *
+     * @param ViewFetcher $viewFetcher
+     * @param MIMETypeResolver $mimeTypeResolver
+     * @param SearchProviderFactory $searchProviderFactory
+     * @param Request $request
+     */
     public function __construct(
         ViewFetcher $viewFetcher,
         MIMETypeResolver $mimeTypeResolver,
@@ -29,6 +50,11 @@ class SearchController
         $this->request = $request;
     }
 
+    /**
+     * Handle a request
+     *
+     * @return View
+     */
     public function handleRequest()
     {
         $acceptTypes = $this->request->getHeader('Accept');

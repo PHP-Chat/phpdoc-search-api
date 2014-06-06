@@ -2,26 +2,13 @@
 
 namespace PHPDocSearch\Web\Views\Error;
 
-use \PHPDocSearch\Web\Views\View,
-    \PHPDocSearch\Web\TemplateFetcher,
-    \PHPDocSearch\Web\Request,
-    \PHPDocSearch\Web\ContentNegotiation\MIMEType;
+use \PHPDocSearch\Web\Views\View;
 
-class NotFound implements View
+class NotFound extends View
 {
-    private $request;
-
-    private $templateFetcher;
-
-    private $contentType;
-
-    public function __construct(TemplateFetcher $templateFetcher, Request $request, MIMEType $contentType = null)
-    {
-        $this->templateFetcher = $templateFetcher;
-        $this->request = $request;
-        $this->contentType = $contentType;
-    }
-
+    /**
+     * Output the content of this view
+     */
     public function render()
     {
         header($this->request->getServerParam('SERVER_PROTOCOL') . ' 404 Not Found');
@@ -44,7 +31,9 @@ class NotFound implements View
         }
 
         if ($path) {
+            /** @noinspection PhpUnusedLocalVariableInspection */
             $message = 'The requested URI ' . $this->request->getPath() . ' was not found on this server';
+            /** @noinspection PhpIncludeInspection */
             include $path;
         }
     }

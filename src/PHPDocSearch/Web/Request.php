@@ -19,8 +19,7 @@ class Request extends Environment
 
     public function __construct($baseDir, Config $config, array $urlParams, array $cookieParams, array $serverParams)
     {
-        $this->setBaseDir($baseDir);
-        $this->config = $config;
+        parent::__construct($baseDir, $config);
 
         $this->urlParams = $urlParams;
         $this->serverParams = $serverParams;

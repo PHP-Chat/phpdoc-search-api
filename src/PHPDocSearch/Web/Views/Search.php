@@ -17,27 +17,33 @@ use \PHPDocSearch\Web\TemplateFetcher,
     \PHPDocSearch\Symbols\GlobalFunction,
     \PHPDocSearch\Symbols\MagicMethod;
 
-class Search implements View
+class Search extends View
 {
-    private $templateFetcher;
-
-    private $request;
-
-    private $contentType;
-
+    /**
+     * @var SearchProvider
+     */
     private $searchProvider;
 
+    /**
+     * Constructor
+     *
+     * @param TemplateFetcher $templateFetcher
+     * @param Request $request
+     * @param MIMEType $contentType
+     * @param SearchProvider $searchProvider
+     */
     public function __construct(TemplateFetcher $templateFetcher, Request $request, MIMEType $contentType, SearchProvider $searchProvider)
     {
-        $this->templateFetcher = $templateFetcher;
-        $this->request = $request;
-        $this->contentType = $contentType;
+        parent::__construct($templateFetcher, $request, $contentType);
         $this->searchProvider = $searchProvider;
     }
 
+    /**
+     * Render this view in JSON format
+     */
     private function renderJSON()
     {
-        $results = $this->searchProvider->getResult();
+        $results = $this->searchProvider->getResult($this->request->getArg('q'));
 
         $data = (object) [
             'count' => count($results)
@@ -127,17 +133,28 @@ class Search implements View
             }
         }
 
-        return json_encode($data);
+        echo json_encode($data);
     }
 
+    /**
+     * Render this view in XML format
+     */
+    private function renderXML()
+    {
+        // todo
+    }
+
+    /**
+     * Output the content of this view
+     */
     public function render()
     {
         header("Content-Type: {$this->contentType}");
 
         if ($this->contentType->getSubType() === 'json') {
-            return $this->renderJSON();
+            $this->renderJSON();
         } else if ($this->contentType->getSubType() === 'xml') {
-            return $this->renderXML();
+            $this->renderXML();
         }
     }
 }

@@ -14,6 +14,7 @@ require __DIR__ . '/autoload.php';
 try {
     $baseDir = realpath(__DIR__ . '/../../');
     $config = new Config($baseDir);
+    $argv = isset($argv) ? $argv : [];
     $env = new CLIEnvironment($baseDir, $config, $argv);
 
     if ($env->hasArg('help')) {

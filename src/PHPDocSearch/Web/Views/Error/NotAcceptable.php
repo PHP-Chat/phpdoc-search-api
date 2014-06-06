@@ -2,26 +2,13 @@
 
 namespace PHPDocSearch\Web\Views\Error;
 
-use \PHPDocSearch\Web\Views\View,
-    \PHPDocSearch\Web\TemplateFetcher,
-    \PHPDocSearch\Web\Request,
-    \PHPDocSearch\Web\ContentNegotiation\MIMEType;
+use \PHPDocSearch\Web\Views\View;
 
-class NotAcceptable implements View
+class NotAcceptable extends View
 {
-    private $request;
-
-    private $templateFetcher;
-
-    private $contentType;
-
-    public function __construct(TemplateFetcher $templateFetcher, Request $request, MIMEType $contentType = null)
-    {
-        $this->templateFetcher = $templateFetcher;
-        $this->request = $request;
-        $this->contentType = $contentType;
-    }
-
+    /**
+     * Output the content of this view
+     */
     public function render()
     {
         header($this->request->getServerParam('SERVER_PROTOCOL') . ' 406 Not Acceptable');
@@ -44,7 +31,9 @@ class NotAcceptable implements View
         }
 
         if ($path) {
+            /** @noinspection PhpUnusedLocalVariableInspection */
             $message = 'The requested URI ' . $this->request->getPath() . ' is not available in an acceptable format for your user agent';
+            /** @noinspection PhpIncludeInspection */
             include $path;
         }
     }
