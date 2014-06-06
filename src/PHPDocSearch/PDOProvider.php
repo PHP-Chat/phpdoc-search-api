@@ -4,13 +4,26 @@ namespace PHPDocSearch;
 
 class PDOProvider
 {
+    /**
+     * @var Config
+     */
     private $config;
 
+    /**
+     * Constructor
+     *
+     * @param Config $config
+     */
     public function __construct(Config $config)
     {
         $this->config = $config;
     }
 
+    /**
+     * Get a new connection to the database
+     *
+     * @return \PDO
+     */
     public function getConnection()
     {
         $host = $this->config->getOption('db.host');
